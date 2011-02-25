@@ -1,9 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Web;
 using System.Web.Mvc;
 using System.Web.Routing;
+
+using Microsoft.Practices.ServiceLocation;
+
+using AspComet;
+using AspComet.Eventing;
 
 using Autofac;
 
@@ -13,7 +18,7 @@ using AshMind.Web.Mvc;
 using AshMind.Web.Mvc.Routing;
 
 using AshMind.LightWiki.Infrastructure.Interfaces;
-using AshMind.Web.Mvc.KeyModel;
+using AshMind.LightWiki.Web.Handlers;
 
 namespace AshMind.LightWiki.Web {
     public class MvcApplication : ConfiguredMvcApplicationBase {
@@ -33,13 +38,27 @@ namespace AshMind.LightWiki.Web {
             );
         }
 
-        protected override void RegisterContainer() {
-            base.RegisterContainer();
-            RequestScope.Resolve<IApplicationSetup[]>().ForEach(s => s.Setup());
+        protected override void BuildContainer(ContainerBuilder builder) {
+            base.BuildContainer(builder);
+            foreach (var metadata in ServiceMetadata.GetMinimumSet()) {
+                var register = builder.RegisterType(metadata.ActualType).As(metadata.ServiceType);
+                if (metadata.IsPerRequest)
+                    register.SingleInstance();
+            }
         }
 
-        protected override bool ShouldDiscoverModulesIn(string path) {
-            return path.Contains("AshMind.LightWiki.");
+        protected override void SetupContainer() {
+            base.SetupContainer();
+            ServiceLocator.SetLocatorProvider(() => new AutofacServiceLocator(() => RequestScope));
+            RequestScope.Resolve<IApplicationSetup[]>().ForEach(s => s.Setup());
+
+            EventHub.Subscribe<PublishingEvent>(
+                "/wiki/change", Container.Resolve<WikiHandler>().ProcessChange
+            );
+        }
+        
+        protected override bool ShouldDiscoverModulesIn(FileInfo file) {
+            return file.Name.StartsWith("AshMind.LightWiki.");
         }
     }
 }

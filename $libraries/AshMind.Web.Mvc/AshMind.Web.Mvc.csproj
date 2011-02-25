@@ -136,6 +136,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\ConventionBasedAssemblyModuleDiscovery.cs" />
+    <Compile Include="Configuration\IModuleDiscovery.cs" />
     <Compile Include="ConfiguredMvcApplicationContract.cs" />
     <Compile Include="HtmlExtensions.cs" />
     <Compile Include="HtmlSecurityExtensions.cs" />

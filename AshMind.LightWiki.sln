@@ -17,6 +17,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "$libraries", "$libraries", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AshMind.Web.Mvc", "$libraries\AshMind.Web.Mvc\AshMind.Web.Mvc.csproj", "{8159A3F4-B730-48B2-8389-F955E3AC7F84}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AspComet", "AspComet", "{3467D604-980C-4B74-8396-A106CC54C64E}"
+	ProjectSection(SolutionItems) = preProject
+		$libraries\AspComet\AspComet.dll = $libraries\AspComet\AspComet.dll
+		$libraries\AspComet\AspComet.pdb = $libraries\AspComet\AspComet.pdb
+		$libraries\AspComet\Microsoft.Practices.ServiceLocation.dll = $libraries\AspComet\Microsoft.Practices.ServiceLocation.dll
+		$libraries\AspComet\Microsoft.Practices.ServiceLocation.pdb = $libraries\AspComet\Microsoft.Practices.ServiceLocation.pdb
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,5 +65,6 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{8159A3F4-B730-48B2-8389-F955E3AC7F84} = {7E3CC672-7437-4CA1-AA1F-F7E2D16D0FBA}
+		{3467D604-980C-4B74-8396-A106CC54C64E} = {7E3CC672-7437-4CA1-AA1F-F7E2D16D0FBA}
 	EndGlobalSection
 EndGlobal

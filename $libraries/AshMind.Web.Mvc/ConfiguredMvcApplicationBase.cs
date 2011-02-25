@@ -4,7 +4,6 @@ using System.IO;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Web;
 using System.Web.Compilation;
@@ -12,17 +11,15 @@ using System.Web.Mvc;
 using System.Web.Routing;
 
 using Autofac;
-using Autofac.Builder;
-using Autofac.Core;
 using Autofac.Integration.Mvc;
 
 using AshMind.Extensions;
 using System.Diagnostics.Contracts;
+using AshMind.Web.Mvc.Configuration;
 
 namespace AshMind.Web.Mvc {
     [ContractClass(typeof(ConfiguredMvcApplicationContract))]
     public abstract class ConfiguredMvcApplicationBase : HttpApplication {
-        //private static IContainerProvider containerProvider;
         private static IContainer container;
         private static AutofacDependencyResolver dependencyResolver;
 
@@ -42,20 +39,20 @@ namespace AshMind.Web.Mvc {
 
         protected void Start() {
             try {
-                this.RegisterFirst();
+                this.SetupBeforeAll();
 
                 AreaRegistration.RegisterAllAreas();
 
                 Contract.Assume(RouteTable.Routes != null);
                 this.RegisterRoutes(RouteTable.Routes);
-                this.RegisterContainer();
+                this.SetupContainer();
 
-                this.RegisterLast();
+                this.SetupAfterAll();
 
                 startFailure = null;
             }
             catch (Exception ex) {
-                startFailure = ex;
+                startFailure = ex;         
             }
         }
 
@@ -65,15 +62,13 @@ namespace AshMind.Web.Mvc {
             this.Start();
         }
 
-        protected virtual void RegisterFirst() {
+        protected virtual void SetupBeforeAll() {
         }
 
         protected abstract void RegisterRoutes(RouteCollection routes);
-        protected virtual void RegisterContainer() {
+        protected virtual void SetupContainer() {
             var builder = new ContainerBuilder();
-
-            builder.RegisterControllers(BuildManager.GetReferencedAssemblies().Cast<Assembly>().ToArray());
-            DiscoverAllModules(builder);
+            this.BuildContainer(builder);
 
             container = builder.Build();
             dependencyResolver = new AutofacDependencyResolver(container);
@@ -82,28 +77,29 @@ namespace AshMind.Web.Mvc {
             DependencyResolver.SetResolver(dependencyResolver);
         }
 
-        protected virtual void RegisterLast() {
+        protected virtual void BuildContainer(ContainerBuilder builder) {
+            builder.RegisterControllers(BuildManager.GetReferencedAssemblies().Cast<Assembly>().ToArray()).PropertiesAutowired();
+            DiscoverAllModules(builder);
+        }
+
+        protected virtual void SetupAfterAll() {
         }
 
         protected virtual void DiscoverAllModules(ContainerBuilder builder) {
-            Contract.Assume(Server != null);
-            var path = Server.MapPath("~/bin");
-
-            foreach (var file in Directory.GetFiles(path, "*.dll")) {
-                if (!ShouldDiscoverModulesIn(file))
-                    continue;
-
-                var assembly = Assembly.LoadFrom(file);
-                Contract.Assume(assembly != null);
-                var modules = from type in assembly.GetTypes()
-                              where typeof(IModule).IsAssignableFrom(type)
-                              select (IModule)Activator.CreateInstance(type);
-
-                modules.ForEach(builder.RegisterModule);
-            }
+            this.CreateModuleDiscovery().Discover(builder);
         }
 
-        protected abstract bool ShouldDiscoverModulesIn(string path);
+        protected virtual IModuleDiscovery CreateModuleDiscovery() {
+            Contract.Assume(Server != null);
+            return new ConventionBasedAssemblyModuleDiscovery(
+                new DirectoryInfo(Server.MapPath("~/bin")), ShouldDiscoverModulesIn
+            );
+        }
+
+        protected virtual bool ShouldDiscoverModulesIn(FileInfo file) {
+            Contract.Requires<ArgumentNullException>(file != null);
+            return file.Name.StartsWith(this.GetType().Namespace.SubstringBefore(".") + ".");
+        }
 
         protected void Application_BeginRequest(object sender, EventArgs e) {
             if (startFailure != null)
