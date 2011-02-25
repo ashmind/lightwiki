@@ -17,10 +17,10 @@ namespace AshMind.LightWiki.Web.Handlers {
 
         public void ProcessChange(PublishingEvent @event) {
             var data = (IDictionary<string, object>)@event.Message.data;
-            this.repository.Save(new WikiPage {
-                Slug = (string)data["page"],
-                Text = (string)data["message"]
-            });
+            var slug = (string)data["page"];
+
+            var page = this.repository.Load(slug);
+            page.Text = (string)data["message"];
         }
     }
 }
