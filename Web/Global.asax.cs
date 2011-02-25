@@ -45,6 +45,10 @@ namespace AshMind.LightWiki.Web {
                 if (!metadata.IsPerRequest)
                     register.SingleInstance();
             }
+
+            builder.RegisterInstance(new Infrastructure.Repositories.RepositoryOptions {
+                StorageRootPath = Server.MapPath("~/#Wiki")
+            });
         }
 
         protected override void SetupContainer() {
