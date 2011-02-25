@@ -1,5 +1,7 @@
 ﻿@model WikiPage
-@Html.TextAreaFor(m => m.Text)
+<div id="text" contenteditable="true">
+  @Model.Text
+</div>
 
 <script type="text/javascript"> // TODO: move to separate file
     $(function () {
@@ -7,7 +9,7 @@
             connected: false,
             subscription: null
         };
-        var text = $('#Text');
+        var text = $('#text');
 
         var unsubscribe = function () {
             if (state.subscription)
@@ -29,7 +31,11 @@
                     if (comet.data.page != '@Model.Slug')
                         return;
 
-                    text.val(comet.data.message);
+                    if (comet.clientId == $.cometd.getClientId())
+                        return;
+
+                    if (text.html() != comet.data.message)
+                        text.html(comet.data.message);
                 });
             }
             else if (wasConnected && !state.connected) {
@@ -53,7 +59,7 @@
 
             $.cometd.publish('/wiki/change', { 
                 page: '@Model.Slug',
-                message: text.val()
+                message: text.html()
             });
         }));
     });
