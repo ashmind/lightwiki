@@ -42,7 +42,7 @@ namespace AshMind.LightWiki.Web {
             base.BuildContainer(builder);
             foreach (var metadata in ServiceMetadata.GetMinimumSet()) {
                 var register = builder.RegisterType(metadata.ActualType).As(metadata.ServiceType);
-                if (metadata.IsPerRequest)
+                if (!metadata.IsPerRequest)
                     register.SingleInstance();
             }
         }
