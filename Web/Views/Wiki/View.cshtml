@@ -26,6 +26,9 @@
 
                 unsubscribe();
                 state.subscription = $.cometd.subscribe('/wiki/change', function (comet) {
+                    if (comet.data.page != '@Model.Slug')
+                        return;
+
                     text.val(comet.data.message);
                 });
             }
@@ -48,7 +51,10 @@
             if (!state.connected)
                 return;
 
-            $.cometd.publish('/wiki/change', { message: text.val() });
+            $.cometd.publish('/wiki/change', { 
+                page: '@Model.Slug',
+                message: text.val()
+            });
         }));
     });
 </script>

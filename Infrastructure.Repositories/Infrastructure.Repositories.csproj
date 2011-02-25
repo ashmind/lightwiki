@@ -79,6 +79,9 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AshMind.Extensions">
+      <HintPath>..\$packages\AshMind.Extensions.1.0.3\lib\3.5\AshMind.Extensions.dll</HintPath>
+    </Reference>
     <Reference Include="Autofac">
       <HintPath>..\$packages\Autofac.2.4.3.700\lib\NET40\Autofac.dll</HintPath>
     </Reference>

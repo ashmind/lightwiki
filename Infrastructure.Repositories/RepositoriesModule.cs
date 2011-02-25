@@ -14,7 +14,7 @@ namespace AshMind.LightWiki.Infrastructure.Repositories {
         protected override void Load(ContainerBuilder builder) {
             builder.RegisterType<WikiPageRepository>()
                    .As<IRepository<WikiPage>>()
-                   .InstancePerLifetimeScope();
+                   .SingleInstance();
 
             base.Load(builder);
         }
