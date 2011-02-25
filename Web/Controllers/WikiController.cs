@@ -1,14 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using System.Web.Mvc;
 using System.Diagnostics.Contracts;
-
-using AshMind.Web.Mvc.KeyModel;
+using System.Linq;
+using System.Web.Mvc;
 
 using AshMind.LightWiki.Domain;
 using AshMind.LightWiki.Infrastructure.Interfaces;
+using AshMind.LightWiki.Web.ViewModels;
 
 namespace AshMind.LightWiki.Web.Controllers {
     [HandleError]
@@ -16,16 +14,21 @@ namespace AshMind.LightWiki.Web.Controllers {
         private readonly IRepository<WikiPage> repository;
 
         public WikiController(IRepository<WikiPage> repository) {
+            Contract.Requires<ArgumentNullException>(repository != null);
+
             this.repository = repository;
         }
 
-        public new ActionResult View(string slug) {
+        public ActionResult Main(string slug) {
             var page = this.repository.Load(slug) ?? new WikiPage {
                 Slug = slug,
                 Text = "Light wiki is light!"
             };
 
-            return View(page);
+            return View(new MainViewModel(
+                page,
+                this.repository.Query().Select(p => p.Slug).ToArray()
+            ));
         }
     }
 }

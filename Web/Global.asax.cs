@@ -28,13 +28,13 @@ namespace AshMind.LightWiki.Web {
             routes.MapLowerCaseRoute(
                 "Default",
                 "",
-                new { controller = "Wiki", action = "View", Slug = "root" }
+                new { controller = "Wiki", action = "Main", Slug = "root" }
             );
 
             routes.MapLowerCaseRoute(
                 "Wiki",
                 "wiki/{slug}",
-                new { controller = "Wiki", action = "View" }
+                new { controller = "Wiki", action = "Main" }
             );
         }
 

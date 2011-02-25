@@ -25,5 +25,9 @@ namespace AshMind.LightWiki.Infrastructure.Repositories {
                 }
             );
         }
+
+        public IEnumerable<WikiPage> Query() {
+            return pages.Values;
+        }
     }
 }

@@ -22,7 +22,7 @@
             state.connected = message.successful;
 
             if (state.connected && !wasConnected) {
-                text.css({ 'border': '1px solid green' }); // TEMPHACK
+                $('body').addClass('connected');
 
                 unsubscribe();
                 state.subscription = $.cometd.subscribe('/wiki/change', function (comet) {
@@ -33,7 +33,7 @@
                 });
             }
             else if (wasConnected && !state.connected) {
-                text.css({ 'border': '1px solid red' }); // TEMPHACK
+                $('body').removeClass('connected');
                 unsubscribe();
             }
         });

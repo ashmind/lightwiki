@@ -1,0 +1,13 @@
+﻿@model MainViewModel
+@{ ViewBag.Title = Model.CurrentPage.Slug + " :: lightwiki"; }
+
+<div id="left">
+  @foreach (var slug in Model.PageSlugs) {
+      var isCurrent = (slug == Model.CurrentPage.Slug);
+      @Html.ActionLink(slug, "Main", new { slug }, new { @class = "block-link" + (isCurrent ? " current" : "") })
+  }
+</div>
+
+<div id="main">
+  @{Html.RenderPartial("_View", Model.CurrentPage);}
+</div>
