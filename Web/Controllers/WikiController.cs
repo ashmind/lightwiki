@@ -15,7 +15,7 @@ namespace AshMind.LightWiki.Web.Controllers {
         public new ActionResult View(string slug) {
             var page = new WikiPage {
                 Slug = slug,
-                Text = "Welcome to LightWiki!"
+                Text = "Light wiki is light!"
             };
 
             return View(page);

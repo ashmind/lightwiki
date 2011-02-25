@@ -16,7 +16,7 @@
             state.subscription = null;
         };
 
-        $.cometd.configure({ url: 'comet.axd', logLevel : 'debug' });
+        $.cometd.configure({ url: '@Url.Content("~/comet.axd")' });
         $.cometd.addListener('/meta/connect', function (message) {
             var wasConnected = state.connected;
             state.connected = message.successful;
@@ -44,7 +44,7 @@
 
         $.cometd.handshake();
 
-        text.keyup($.throttle(100, function () {
+        text.keyup($.throttle(1000, function () {
             if (!state.connected)
                 return;
 
