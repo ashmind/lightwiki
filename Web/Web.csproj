@@ -85,6 +85,7 @@
       <HintPath>..\$packages\AshMind.Extensions.1.0.3\lib\3.5\AshMind.Extensions.dll</HintPath>
     </Reference>
     <Reference Include="AspComet, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\$libraries\AspComet\AspComet.dll</HintPath>
     </Reference>
     <Reference Include="Autofac, Version=2.4.3.700, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">

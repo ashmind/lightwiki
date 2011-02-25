@@ -1,12 +1,12 @@
 /**
  * Dual licensed under the Apache License 2.0 and the MIT license.
- * $Revision$ $Date: 2009-11-18 10:26:09 +0000 (Wed, 18 Nov 2009) $
+ * $Revision$ $Date: 2010-10-18 22:15:49 +0200 (Mon, 18 Oct 2010) $
  */
 (function($)
 {
     // Remap cometd JSON functions to jquery JSON functions
-    org.cometd.JSON.toJSON = $.toJSON;
-    org.cometd.JSON.fromJSON = $.secureEvalJSON;
+    org.cometd.JSON.toJSON = JSON.stringify;
+    org.cometd.JSON.fromJSON = JSON.parse;
 
     function _setHeaders(xhr, headers)
     {
@@ -33,8 +33,9 @@
         {
             return $.ajax({
                 url: packet.url,
+                async: packet.sync !== true,
                 type: 'POST',
-                contentType: 'application/json',
+                contentType: 'application/json;charset=UTF-8',
                 data: packet.body,
                 beforeSend: function(xhr)
                 {
@@ -59,6 +60,7 @@
         {
             $.ajax({
                 url: packet.url,
+                async: packet.sync !== true,
                 type: 'GET',
                 dataType: 'jsonp',
                 jsonp: 'jsonp',
