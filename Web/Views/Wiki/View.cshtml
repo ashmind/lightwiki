@@ -2,49 +2,53 @@
 @Html.TextAreaFor(m => m.Text)
 
 <script type="text/javascript"> // TODO: move to separate file
-  $(function () {
-      var state = {
-          connected: false,
-          subscription: null
-      };
-      var text = $('#Text');
+    $(function () {
+        var state = {
+            connected: false,
+            subscription: null
+        };
+        var text = $('#Text');
 
-      $.cometd.configure({ url : 'comet.axd' });
-      $.cometd.addListener('/meta/connect', function(message) {
-          var unsubscribe = function() { 
-              if (state.subscription)
-                  $.cometd.unsubscribe(state.subscription);
-          };
+        var unsubscribe = function () {
+            if (state.subscription)
+                $.cometd.unsubscribe(state.subscription);
 
-          var wasConnected = state.connected;
-          state.connected = message.successful;
-          
-          if (state.connected && !wasConnected) {
-              text.css({ 'border': '1px solid green' }); // TEMPHACK
-              
-              unsubscribe();
-              state.subscription = $.cometd.subscribe('/wiki/change', function(comet) {
-                  text.val(comet.data.message);
-              });
-          }
-          else if (wasConnected && !state.connected) {
-              text.css({ 'border': '1px solid red' }); // TEMPHACK
-              unsubscribe();
-          }
-      });
+            state.subscription = null;
+        };
 
-      $.cometd.addListener('/meta/disconnect', function(message) {
-          if (message.successful)
-              state.connected = false;
-      });
+        $.cometd.configure({ url: 'comet.axd', logLevel : 'debug' });
+        $.cometd.addListener('/meta/connect', function (message) {
+            var wasConnected = state.connected;
+            state.connected = message.successful;
 
-      $.cometd.handshake();
-      
-      text.keyup($.throttle(100, function() {
-          if (!state.connected)
-              return;
+            if (state.connected && !wasConnected) {
+                text.css({ 'border': '1px solid green' }); // TEMPHACK
 
-          $.cometd.publish('/wiki/change', { message: text.val() });
-      }));
-  });
+                unsubscribe();
+                state.subscription = $.cometd.subscribe('/wiki/change', function (comet) {
+                    text.val(comet.data.message);
+                });
+            }
+            else if (wasConnected && !state.connected) {
+                text.css({ 'border': '1px solid red' }); // TEMPHACK
+                unsubscribe();
+            }
+        });
+
+        $.cometd.addListener('/meta/disconnect', function (message) {
+            if (message.successful) {
+                state.connected = false;
+                unsubscribe();
+            }
+        });
+
+        $.cometd.handshake();
+
+        text.keyup($.throttle(100, function () {
+            if (!state.connected)
+                return;
+
+            $.cometd.publish('/wiki/change', { message: text.val() });
+        }));
+    });
 </script>
