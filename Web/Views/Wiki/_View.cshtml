@@ -3,64 +3,12 @@
   @Html.Raw(Model.Text)
 </div>
 
-<script type="text/javascript"> // TODO: move to separate file
-    $(function () {
-        var state = {
-            connected: false,
-            subscription: null
-        };
-        var text = $('#text');
-
-        var unsubscribe = function () {
-            if (state.subscription)
-                $.cometd.unsubscribe(state.subscription);
-
-            state.subscription = null;
-        };
-
-        $.cometd.configure({ url: '@Url.Content("~/comet.axd")' });
-        $.cometd.addListener('/meta/connect', function (message) {
-            var wasConnected = state.connected;
-            state.connected = message.successful;
-
-            if (state.connected && !wasConnected) {
-                $('body').addClass('connected');
-
-                unsubscribe();
-                state.subscription = $.cometd.subscribe('/wiki/change', function (comet) {
-                    if (comet.data.page != '@Model.Slug')
-                        return;
-
-                    if (comet.clientId == $.cometd.getClientId())
-                        return;
-
-                    if (text.html() != comet.data.message)
-                        text.html(comet.data.message);
-                });
-            }
-            else if (wasConnected && !state.connected) {
-                $('body').removeClass('connected');
-                unsubscribe();
-            }
-        });
-
-        $.cometd.addListener('/meta/disconnect', function (message) {
-            if (message.successful) {
-                state.connected = false;
-                unsubscribe();
-            }
-        });
-
-        $.cometd.handshake();
-
-        text.keyup($.throttle(1000, function () {
-            if (!state.connected)
-                return;
-
-            $.cometd.publish('/wiki/change', { 
-                page: '@Model.Slug',
-                message: text.html()
-            });
-        }));
-    });
+<script type="text/javascript">
+  $(function() {
+      lightwiki.setup({
+          cometUrl: '@Url.Content("~/comet.axd")',
+          editor: '#text',
+          page: '@Model.Slug'
+      });
+  });
 </script>

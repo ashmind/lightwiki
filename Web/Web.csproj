@@ -141,7 +141,8 @@
     <Content Include="Scripts\cometd.js" />
     <Content Include="Scripts\jquery.ba-throttle-debounce.min.js" />
     <Content Include="Scripts\jquery.cometd.js" />
-    <Content Include="Scripts\jquery.json-2.2.js" />
+    <Content Include="Scripts\json2.js" />
+    <Content Include="Scripts\lightwiki.js" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>
