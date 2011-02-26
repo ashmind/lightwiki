@@ -1,6 +1,6 @@
 ﻿@model WikiPage
 <div id="text" contenteditable="true">
-  @Model.Text
+  @Html.Raw(Model.Text)
 </div>
 
 <script type="text/javascript"> // TODO: move to separate file
