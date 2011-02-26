@@ -57,7 +57,7 @@ namespace AshMind.LightWiki.Web {
             RequestScope.Resolve<IApplicationSetup[]>().ForEach(s => s.Setup());
 
             EventHub.Subscribe<PublishingEvent>(
-                "/wiki/change", Container.Resolve<WikiHandler>().ProcessChange
+                "/wiki/*", Container.Resolve<WikiHandler>().ProcessEvent
             );
         }
         

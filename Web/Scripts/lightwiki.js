@@ -34,11 +34,11 @@
         var patch = that._patcher.patch_toText(
             that._patcher.patch_make(last, html)
         );
-
+        
         $('body').addClass('sending');
-        $.cometd.publish('/wiki/change', {
+        $.cometd.publish('/wiki/' + that._settings.page, {
             by:     that._settings.unique,
-            page:   that._settings.page,
+            action: 'change',
             patch:  patch
         });
 
@@ -55,8 +55,14 @@
         if (this._connected && !wasConnected) {
             $('body').addClass('connected');
 
-            this._unsubscribe();
-            this._subscription = $.cometd.subscribe('/wiki/change', this, this['/wiki/change']);
+            $.cometd.batch(this, function() {
+                this._unsubscribe();
+                this._subscription = $.cometd.subscribe(
+                    '/wiki/' + this._settings.page,
+                    this, this['/wiki/?']
+                );
+                $.cometd.publish();
+            });
         }
         else if (wasConnected && !this._connected) {
             $('body').removeClass('connected');
@@ -64,14 +70,15 @@
         }
     },
     
-    '/wiki/change' : function(comet) {
-        if (comet.data.page != this._settings.page)
-            return;
-        
-        var patch = this._patcher.patch_fromText(comet.data.patch);
+    '/wiki/?' : function(message) {
+        this['/wiki/?!' + message.data.action].apply(this, message);
+    },
+    
+    '/wiki/?!change' : function(message) {
+        var patch = this._patcher.patch_fromText(message.data.patch);
         this._lastSyncData = this._patcher.patch_apply(patch, this._lastSyncData)[0];
 
-        if (comet.data.by == this._settings.unique)
+        if (message.data.by == this._settings.unique)
             return;
         
         var editor = this._settings.editor;

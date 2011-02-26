@@ -30,9 +30,9 @@
     <CodeContractsRuntimeThrowOnFailure>True</CodeContractsRuntimeThrowOnFailure>
     <CodeContractsRuntimeCallSiteRequires>False</CodeContractsRuntimeCallSiteRequires>
     <CodeContractsRunCodeAnalysis>True</CodeContractsRunCodeAnalysis>
-    <CodeContractsNonNullObligations>True</CodeContractsNonNullObligations>
-    <CodeContractsBoundsObligations>True</CodeContractsBoundsObligations>
-    <CodeContractsArithmeticObligations>True</CodeContractsArithmeticObligations>
+    <CodeContractsNonNullObligations>False</CodeContractsNonNullObligations>
+    <CodeContractsBoundsObligations>False</CodeContractsBoundsObligations>
+    <CodeContractsArithmeticObligations>False</CodeContractsArithmeticObligations>
     <CodeContractsContainerAnalysis>True</CodeContractsContainerAnalysis>
     <CodeContractsRedundantAssumptions>True</CodeContractsRedundantAssumptions>
     <CodeContractsRunInBackground>True</CodeContractsRunInBackground>
@@ -98,6 +98,7 @@
     <Reference Include="Autofac.Integration.Mvc">
       <HintPath>..\$packages\Autofac.Mvc3.2.4.3.700\lib\NET40\Autofac.Integration.Mvc.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.Practices.ServiceLocation">
       <HintPath>..\$libraries\AspComet\Microsoft.Practices.ServiceLocation.dll</HintPath>
     </Reference>
@@ -145,6 +146,8 @@
     <Content Include="Scripts\jquery.cometd.js" />
     <Content Include="Scripts\json2.js" />
     <Content Include="Scripts\lightwiki.js" />
+    <Content Include="Scripts\rangy-core.js" />
+    <Content Include="Scripts\rangy-core.min.js" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>
