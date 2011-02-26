@@ -7,8 +7,9 @@
   $(function() {
       lightwiki.setup({
           cometUrl: '@Url.Content("~/comet.axd")',
-          editor: '#text',
-          page: '@Model.Slug'
+          editor:   '#text',
+          page:     '@Model.Slug',
+          unique:   '@Guid.NewGuid()'
       });
   });
 </script>

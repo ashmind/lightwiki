@@ -139,6 +139,8 @@
   <ItemGroup>
     <Content Include="Global.asax" />
     <Content Include="Scripts\cometd.js" />
+    <Content Include="Scripts\diff_match_patch.js" />
+    <Content Include="Scripts\diff_match_patch_uncompressed.js" />
     <Content Include="Scripts\jquery.ba-throttle-debounce.min.js" />
     <Content Include="Scripts\jquery.cometd.js" />
     <Content Include="Scripts\json2.js" />

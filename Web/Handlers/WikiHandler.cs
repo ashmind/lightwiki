@@ -5,14 +5,20 @@ using System.Linq;
 using AspComet.Eventing;
 
 using AshMind.LightWiki.Domain;
+using AshMind.LightWiki.Domain.Services;
 using AshMind.LightWiki.Infrastructure.Interfaces;
 
 namespace AshMind.LightWiki.Web.Handlers {
     public class WikiHandler {
         private readonly IRepository<WikiPage> repository;
+        private readonly WikiPageUpdater updater;
 
-        public WikiHandler(IRepository<WikiPage> repository) {
+        public WikiHandler(
+            IRepository<WikiPage> repository,
+            WikiPageUpdater updater
+        ) {
             this.repository = repository;
+            this.updater = updater;
         }
 
         public void ProcessChange(PublishingEvent @event) {
@@ -20,7 +26,9 @@ namespace AshMind.LightWiki.Web.Handlers {
             var slug = (string)data["page"];
 
             var page = this.repository.Load(slug);
-            page.Text = (string)data["message"];
+            var patch = (string)data["patch"];
+
+            updater.Update(page, patch);
         }
     }
 }

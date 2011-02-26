@@ -8,13 +8,16 @@
         settings.editor = $(settings.editor);
         
         this._settings = settings;
+        this._patcher = new diff_match_patch();
+
+        this._lastSyncData = settings.editor.html();
         
         $.cometd.configure({ url: settings.cometUrl });
         $.cometd.addListener('/meta/connect', this, this['/meta/connect']);
         $.cometd.addListener('/meta/disconnect', this, this['/meta/disconnect']);
 
         $.cometd.handshake();
-
+        
         settings.editor.keyup({ that : this }, $.throttle(
             settings.throttleSend, this['editor.keyup']
         ));
@@ -25,10 +28,24 @@
         if (!that._connected)
             return;
 
-        $.cometd.publish('/wiki/change', { 
-            page: that._settings.page,
-            message: $(this).html()
+        var html = $(this).html();
+        var last = that._lastSyncData;
+
+        var patch = that._patcher.patch_toText(
+            that._patcher.patch_make(last, html)
+        );
+
+        $('body').addClass('sending');
+        $.cometd.publish('/wiki/change', {
+            by:     that._settings.unique,
+            page:   that._settings.page,
+            patch:  patch
         });
+
+        window.setTimeout(
+            function() { $('body').removeClass('sending'); },
+            500
+        );
     },
     
     '/meta/connect' : function(message) {
@@ -50,13 +67,20 @@
     '/wiki/change' : function(comet) {
         if (comet.data.page != this._settings.page)
             return;
+        
+        var patch = this._patcher.patch_fromText(comet.data.patch);
+        this._lastSyncData = this._patcher.patch_apply(patch, this._lastSyncData)[0];
 
-        if (comet.clientId == $.cometd.getClientId())
+        if (comet.data.by == this._settings.unique)
             return;
-
+        
         var editor = this._settings.editor;
-        if (editor.html() != comet.data.message)
-            editor.html(comet.data.message);
+        var html = editor.html();
+        
+        var patched = this._patcher.patch_apply(patch, html)[0];
+            
+        if (html != patched)
+            editor.html(patched);
     },
     
     '/meta/disconnect' : function (message) {

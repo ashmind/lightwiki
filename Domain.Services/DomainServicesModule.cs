@@ -1,17 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 
 using Autofac;
 
 namespace AshMind.LightWiki.Domain.Services {
-    public class DomainServicesModule : Autofac.Module {
+    public class DomainServicesModule : Module {
         protected override void Load(ContainerBuilder builder) {
-            builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
-                   .AsImplementedInterfaces()
-                   .InstancePerLifetimeScope();
+            builder.RegisterType<DiffMatchPatch.diff_match_patch>()
+                   .AsSelf()
+                   .SingleInstance();
+
+            builder.RegisterType<WikiPageUpdater>()
+                   .AsSelf()
+                   .SingleInstance();
 
             base.Load(builder);
         }
