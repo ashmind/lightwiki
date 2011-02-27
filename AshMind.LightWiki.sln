@@ -23,6 +23,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AspComet", "AspComet", "{34
 		$libraries\AspComet\Microsoft.Practices.ServiceLocation.pdb = $libraries\AspComet\Microsoft.Practices.ServiceLocation.pdb
 	EndProjectSection
 EndProject
+Project("{00000000-0000-0000-0000-000000000000}") = "Domain.Services.Tests", "Domain.Services.Tests\Domain.Services.Tests.csproj", "{7F217BAA-6275-4754-AA02-56E498717291}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +59,10 @@ Global
 		{8159A3F4-B730-48B2-8389-F955E3AC7F84}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8159A3F4-B730-48B2-8389-F955E3AC7F84}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8159A3F4-B730-48B2-8389-F955E3AC7F84}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F217BAA-6275-4754-AA02-56E498717291}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F217BAA-6275-4754-AA02-56E498717291}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F217BAA-6275-4754-AA02-56E498717291}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F217BAA-6275-4754-AA02-56E498717291}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -2,14 +2,13 @@
 @{ ViewBag.Title = Model.CurrentPage.Slug + " :: lightwiki"; }
 
 <section id="left">
-  @foreach (var slug in Model.PageSlugs) {
-      var isCurrent = (slug == Model.CurrentPage.Slug);
+  @foreach (var page in Model.Pages) {
+      var isCurrent = (page == Model.CurrentPage);
     
-      <a href="@Url.Action("Main", new { slug })" class="block-link@(isCurrent ? " current" : "")">
-          @slug
-
+      <a href="@Url.Action("Main", new { slug = page.Slug })" class="block-link@(isCurrent ? " current" : "")">
+          @page.Slug
           @if (isCurrent) {
-            <text>(<span id="revision">0</span>)</text>
+            <text>(<span id="revision">@page.RevisionNumber</span>)</text>
           }
       </a>
   }

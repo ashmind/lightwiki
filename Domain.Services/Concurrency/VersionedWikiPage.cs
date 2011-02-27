@@ -1,12 +1,13 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+
+using DiffMatchPatch;
 
 namespace AshMind.LightWiki.Domain.Services.Concurrency {
     internal class VersionedWikiPage : WikiPage {
         public VersionedWikiPage(string slug, string text) : base(slug) {
-            this.AllRevisions = new ConcurrentDictionary<int, WikiPageRevision>();
+            this.Changes = new Dictionary<int, IList<Patch>>();
             this.Revision = new WikiPageRevision(0, text);
         }
 
@@ -17,7 +18,6 @@ namespace AshMind.LightWiki.Domain.Services.Concurrency {
                 if (this.revision == value)
                     return;
 
-                this.AllRevisions.Add(value.Number, value);
                 this.revision = value;
             }
         }
@@ -27,6 +27,12 @@ namespace AshMind.LightWiki.Domain.Services.Concurrency {
             set { throw new NotSupportedException("Set Revision instead."); }
         }
 
-        public IDictionary<int, WikiPageRevision> AllRevisions { get; private set; }
+        // this *must* be used only in locked mode!
+        public IDictionary<int, IList<Patch>> Changes { get; private set; }
+
+        public override int RevisionNumber {
+            get { return this.Revision.Number; }
+            set { throw new NotSupportedException("Set Revision instead."); }
+        }
     }
 }

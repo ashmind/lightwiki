@@ -4,12 +4,14 @@ using System.Linq;
 
 namespace AshMind.LightWiki.Domain.Services {
     public class WikiPageUpdateResult {
-        public WikiPageUpdateResult(int revisionNumber, string patchToRevision) {
+        public WikiPageUpdateResult(int revisionNumber, string patchForAuthor, string patchForOthers) {
             this.RevisionNumber = revisionNumber;
-            this.PatchToRevision = patchToRevision;
+            this.PatchForAuthor = patchForAuthor;
+            this.PatchForOthers = patchForOthers;
         }
 
         public int RevisionNumber { get; private set; }
-        public string PatchToRevision { get; private set; }
+        public string PatchForAuthor { get; private set; }
+        public string PatchForOthers { get; private set; }
     }
 }

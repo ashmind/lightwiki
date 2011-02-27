@@ -1338,7 +1338,7 @@ namespace DiffMatchPatch {
      * @param diffs List of Diff objects.
      * @return Source text.
      */
-    public string diff_text1(List<Diff> diffs) {
+    public string diff_text1(IList<Diff> diffs) {
       StringBuilder text = new StringBuilder();
       foreach (Diff aDiff in diffs) {
         if (aDiff.operation != Operation.INSERT) {
@@ -1866,7 +1866,7 @@ namespace DiffMatchPatch {
      * @param patches Array of patch objects.
      * @return Array of patch objects.
      */
-    public List<Patch> patch_deepCopy(List<Patch> patches) {
+    public List<Patch> patch_deepCopy(IList<Patch> patches) {
       List<Patch> patchesCopy = new List<Patch>();
       foreach (Patch aPatch in patches) {
         Patch patchCopy = new Patch();
@@ -1998,7 +1998,7 @@ namespace DiffMatchPatch {
      * @param patches Array of patch objects.
      * @return The padding string added to each side.
      */
-    public string patch_addPadding(List<Patch> patches) {
+    public string patch_addPadding(IList<Patch> patches) {
       short paddingLength = this.Patch_Margin;
       string nullPadding = string.Empty;
       for (short x = 1; x <= paddingLength; x++) {
@@ -2218,9 +2218,9 @@ namespace DiffMatchPatch {
         textPointer++;
 
         while (textPointer < text.Length) {
-          try {
+          if (text[textPointer].Length > 0) {
             sign = text[textPointer][0];
-          } catch (IndexOutOfRangeException) {
+          } else {
             // Blank line?  Whatever.
             textPointer++;
             continue;

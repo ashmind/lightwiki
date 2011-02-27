@@ -3,52 +3,58 @@
     _subscription : null,
     _settings : null,
     
-    _last : {
+    _server : {
         text : '',
         revision: 0
     },
-    _pendingPatches : {},
+    _sent : {
+        text : ''
+    },
     
     setup : function(settings) {
-        settings.throttleSend = settings.throttleSend || 1000;
+        settings.syncInterval = settings.syncInterval || 1000;
         settings.editor = $(settings.editor);
         settings.revisionContainer = $(settings.revisionContainer);
         
         this._settings = settings;
+        this._editor = settings.editor;
         this._patcher = new diff_match_patch();
 
-        this._last.text = settings.editor.html();
+        this._server.text = settings.editor.html();
+        this._server.revision = settings.serverRevision;
+        this._sent.text = this._server.text;
         
         $.cometd.configure({ url: settings.cometUrl });
         $.cometd.addListener('/meta/connect', this, this['/meta/connect']);
         $.cometd.addListener('/meta/disconnect', this, this['/meta/disconnect']);
 
         $.cometd.handshake();
-        
-        settings.editor.keyup({ that : this }, $.throttle(
-            settings.throttleSend, this['editor.keyup']
-        ));
+
+        var that = this;
+        window.setInterval(function() { that._timer(); }, settings.syncInterval);
     },
     
-    'editor.keyup' : function(e) {
-        var that = e.data.that;        
-        that._settings.revisionContainer.text(that._last.revision + '+');
+    _timer : function() {
+        var html = this._editor.html();
+        if (html === this._sent.text)
+            return;
+        
+        this._settings.revisionContainer.text(this._server.revision + '+');
 
-        if (!that._connected)
+        if (!this._connected)
             return;
 
-        var html = $(this).html();
-        var last = that._last.text;
-
-        var patch = that._patcher.patch_toText(
-            that._patcher.patch_make(last, html)
+        var last = this._server.text;
+        var patch = this._patcher.patch_toText(
+            this._patcher.patch_make(last, html)
         );
         
         $('body').addClass('sending');
-        $.cometd.publish('/wiki/' + that._settings.page + '/change', {
-            revision: that._last.revision,
+        $.cometd.publish('/wiki/' + this._settings.page + '/change', {
+            revision: this._server.revision,
             patch:    patch
         });
+        this._sent.text = html;
 
         window.setTimeout(
             function() { $('body').removeClass('sending'); },
@@ -80,32 +86,16 @@
     
     '/wiki/?/sync' : function(message) {
         var patch = this._patcher.patch_fromText(message.data.patch);
-        if (this._last.revision === message.data.revision - 1) {
-            var editor = this._settings.editor;
-            var html = editor.html();
-            
-            var patched = this._patcher.patch_apply(patch, html)[0];
-            var revision = message.data.revision;
-
-            patch = this._pendingPatches[revision];
-            while (patch) {
-                patched = this._patcher.patch_apply(patch, patched)[0];
-                delete this._pendingPatches[revision];
-                
-                revision += 1;
-                patch = this._pendingPatches[revision];
-            }
-
-            this._last.text = patched;
-            this._last.revision = revision;
-            if (html !== patched)
-                editor.html(patched);
-            
-            this._settings.revisionContainer.text(revision);
-        }
-        else if (this._last.revision < message.data.revision - 1) {
-            this._pendingPatches[message.data.revision] = patch;
-        }
+        this._server.text = this._patcher.patch_apply(patch, this._server.text)[0];
+        this._server.revision = message.data.revision;
+        this._sent.text = this._server.text;
+        
+        var current = this._editor.html();
+        var patched = this._patcher.patch_apply(patch, current)[0];
+        if (patched !== current)
+            this._editor.html(patched);
+        
+        this._settings.revisionContainer.text(this._server.revision);
     },
     
     '/meta/disconnect' : function (message) {

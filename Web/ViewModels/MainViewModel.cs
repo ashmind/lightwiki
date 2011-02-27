@@ -5,12 +5,12 @@ using AshMind.LightWiki.Domain;
 
 namespace AshMind.LightWiki.Web.ViewModels {
     public class MainViewModel {
-        public MainViewModel(WikiPage currentPage, IList<string> pageSlugs) {
+        public MainViewModel(WikiPage currentPage, IEnumerable<WikiPage> pages) {
             this.CurrentPage = currentPage;
-            this.PageSlugs = pageSlugs;
+            this.Pages = pages;
         }
 
-        public WikiPage CurrentPage { get; private set; }
-        public IList<string> PageSlugs { get; private set; }
+        public WikiPage CurrentPage         { get; private set; }
+        public IEnumerable<WikiPage> Pages  { get; private set; }
     }
 }

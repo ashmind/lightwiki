@@ -28,7 +28,7 @@ namespace AshMind.LightWiki.Web.Controllers {
 
             return View(new MainViewModel(
                 page,
-                this.repository.Query().Select(p => p.Slug).ToArray()
+                this.repository.Query()
             ));
         }
     }

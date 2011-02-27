@@ -6,11 +6,11 @@
 <script type="text/javascript">
   $(function() {
       lightwiki.setup({
-          cometUrl: '@Url.Content("~/comet.axd")',
-          editor:   '#text',
+          cometUrl:          '@Url.Content("~/comet.axd")',
+          editor:            '#text',
           revisionContainer: '#revision',
-          page:     '@Model.Slug',
-          unique:   '@Guid.NewGuid()'
+          page:              '@Model.Slug',
+          serverRevision:    @Model.RevisionNumber
       });
   });
 </script>

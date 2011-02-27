@@ -16,5 +16,6 @@ namespace AshMind.LightWiki.Domain {
 
         public string Slug { get; private set; }
         public virtual string Text { get; set; }
+        public virtual int RevisionNumber { get; set; }
     }
 }

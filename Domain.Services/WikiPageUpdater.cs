@@ -16,38 +16,77 @@ namespace AshMind.LightWiki.Domain.Services {
 
         public WikiPageUpdateResult Update(WikiPage page, int revisionToPatch, string patchText) {
             var versioned = ((VersionedWikiPage)page);
-            var revision = versioned.AllRevisions[revisionToPatch];
             var patches = this.patcher.patch_fromText(patchText);
             
-            var text = (string)this.patcher.patch_apply(patches, revision.Text)[0];
-            var newPatches = (IList<Patch>)null;
+            var revisionPatches = (IList<Patch>)null;
             var revisionNumber = 0;
             lock (versioned) {
-                newPatches = LockedUpdate(versioned, revision, text);
+                LockedUpdate(versioned, revisionToPatch, patches);
                 revisionNumber = versioned.Revision.Number;
+                revisionPatches = versioned.Changes[revisionNumber];
             }
 
             return new WikiPageUpdateResult(
                 revisionNumber,
-                this.patcher.patch_toText(newPatches)
+                "",
+                this.patcher.patch_toText(revisionPatches)
             );
         }
 
-        private IList<Patch> LockedUpdate(VersionedWikiPage page, WikiPageRevision revision, string newTextForRevision) {
-            if (page.Revision == revision) {
-                // patching current revision, everything is easy
-                page.Revision = new WikiPageRevision(revision.Number + 1, newTextForRevision);
-                return new Patch[0];
+        private void LockedUpdate(VersionedWikiPage page, int revisionToPatch, List<Patch> patches) {
+            /*if (revisionToPatch != page.Revision.Number)
+                this.LockedMergePatches(page, revisionToPatch, patches);*/
+
+            LockedPatchCurrentRevision(page, patches, regeneratePatches : revisionToPatch != page.Revision.Number);
+        }
+
+        // simple situation
+        private void LockedPatchCurrentRevision(VersionedWikiPage page, List<Patch> patches, bool regeneratePatches) {
+            var previousText = page.Text;
+            page.Revision = new WikiPageRevision(
+                page.RevisionNumber + 1,
+                (string)this.patcher.patch_apply(patches, previousText)[0]
+            );
+            if (regeneratePatches)
+                patches = this.patcher.patch_make(previousText, page.Text);
+
+            page.Changes.Add(page.RevisionNumber, patches);
+        }
+
+        // complex situation
+        /*private void LockedMergePatches(VersionedWikiPage page, int revisionToPatch, IList<Patch> patches) {
+            for (var i = revisionToPatch + 1; i <= page.Revision.Number; i++) {
+                this.Merge(patches, page.Changes[i]);
+            }
+        }
+
+        private void Merge(IList<Patch> patches, IList<Patch> precedingPatches) {
+            for (var i = 0; i < patches.Count; i++) {
+                var patch = patches[i];
+                foreach (var preceding in precedingPatches) {
+                    if (preceding.start1 > patch.start1 + patch.length1)
+                        break;
+
+                    bool keep;
+                    this.MergeActuallyPreceding(patch, preceding, out keep);
+
+                    if (!keep) {
+                        patches.RemoveAt(i);
+                        i -= 1;
+                    }
+                }
+            }
+        }
+
+        private void MergeActuallyPreceding(Patch patch, Patch preceding, out bool keep) {
+            if (preceding.start1 + preceding.length1 >= patch.start1 + patch.length1) {
+                keep = false;
+                return;
             }
 
-            // patching old revision, everything is harder
-            var newerPatches = this.patcher.patch_make(newTextForRevision, page.Text);
-            page.Revision = new WikiPageRevision(
-                page.Revision.Number + 1,
-                (string)this.patcher.patch_apply(newerPatches, newTextForRevision)[0]
-            );
-
-            return newerPatches;
-        }
+            patch.start1 += preceding.length2 - preceding.length1;
+            patch.start2 += preceding.length2 - preceding.length1;
+            keep = true;
+        }*/
     }
 }

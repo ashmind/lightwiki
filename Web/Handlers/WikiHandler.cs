@@ -52,22 +52,32 @@ namespace AshMind.LightWiki.Web.Handlers {
             if (action != "change")
                 return;
 
-            this.ProcessChange(@event.Channel.SubstringBeforeLast("/"), data);
+            this.ProcessChange(@event.Channel.SubstringBeforeLast("/"), @event.Message.clientId, data);
         }
 
-        private void ProcessChange(string channelPrefix, dynamic data) {
+        private void ProcessChange(string channelPrefix, string clientId, dynamic data) {
             var page = this.repository.Load(channelPrefix.SubstringAfterLast("/"));
             var result = updater.Update(page, (int)data.revision, (string)data.patch);
 
             var syncChannel = channelPrefix + "/sync";
-            var clients = this.clientRepository.WhereSubscribedTo(syncChannel);
+
+            var author = this.clientRepository.GetByID(clientId);
+            this.SendSyncMessage(
+                new[] { author },
+                syncChannel, result.RevisionNumber, result.PatchForAuthor
+            );
+            this.SendSyncMessage(
+                this.clientRepository.WhereSubscribedTo(syncChannel).Except(author),
+                syncChannel, result.RevisionNumber, result.PatchForOthers
+            );
+        }
+
+        private void SendSyncMessage(IEnumerable<IClient> clients, string channel, int revision, string patch) {
             var message = new Message {
-                channel = channelPrefix + "/sync",
-                data = new {
-                    revision = result.RevisionNumber,
-                    patch = result.PatchToRevision
-                }
+                channel = channel,
+                data = new { revision, patch }
             };
+
             foreach (var client in clients) {
                 client.Enqueue(message);
                 client.FlushQueue();
