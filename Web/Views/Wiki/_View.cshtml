@@ -8,6 +8,7 @@
       lightwiki.setup({
           cometUrl: '@Url.Content("~/comet.axd")',
           editor:   '#text',
+          revisionContainer: '#revision',
           page:     '@Model.Slug',
           unique:   '@Guid.NewGuid()'
       });

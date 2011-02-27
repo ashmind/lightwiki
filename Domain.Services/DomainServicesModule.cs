@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+using AshMind.LightWiki.Domain.Services.Concurrency;
+
 using Autofac;
 
 namespace AshMind.LightWiki.Domain.Services {
@@ -14,6 +16,8 @@ namespace AshMind.LightWiki.Domain.Services {
             builder.RegisterType<WikiPageUpdater>()
                    .AsSelf()
                    .SingleInstance();
+
+            WikiPage.Create = (slug, text) => new VersionedWikiPage(slug, text);
 
             base.Load(builder);
         }

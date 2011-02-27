@@ -54,10 +54,10 @@ namespace AshMind.LightWiki.Web {
         protected override void SetupContainer() {
             base.SetupContainer();
             ServiceLocator.SetLocatorProvider(() => new AutofacServiceLocator(() => RequestScope));
-            RequestScope.Resolve<IApplicationSetup[]>().ForEach(s => s.Setup());
+            Container.Resolve<IApplicationSetup[]>().ForEach(s => s.Setup());
 
             EventHub.Subscribe<PublishingEvent>(
-                "/wiki/*", Container.Resolve<WikiHandler>().ProcessEvent
+                "/wiki/**", Container.Resolve<WikiHandler>().ProcessEvent
             );
         }
         

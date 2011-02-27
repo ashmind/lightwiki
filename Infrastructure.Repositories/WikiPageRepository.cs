@@ -31,10 +31,7 @@ namespace AshMind.LightWiki.Infrastructure.Repositories {
         public void Save(WikiPage entity) {
             pages.AddOrUpdate(
                 entity.Slug, entity,
-                (key, existing) => new WikiPage {
-                    Slug = existing.Slug,
-                    Text = entity.Text
-                }
+                (key, existing) => WikiPage.Create(existing.Slug, entity.Text)
             );
         }
 
@@ -45,10 +42,7 @@ namespace AshMind.LightWiki.Infrastructure.Repositories {
         private void LoadFromFiles() {
             foreach (var file in root.GetFiles()) {
                 var slug = file.NameWithoutExtension;
-                pages.TryAdd(slug, new WikiPage {
-                    Slug = slug,
-                    Text = file.ReadAllText()
-                });
+                pages.TryAdd(slug, WikiPage.Create(slug, file.ReadAllText()));
             }
 
             this.previousSnapshot = this.GetSnapshot();
@@ -70,10 +64,10 @@ namespace AshMind.LightWiki.Infrastructure.Repositories {
         private IDictionary<string, WikiPage> GetSnapshot() {
             return pages.ToDictionary(
                 pair => pair.Key,
-                pair => new WikiPage {
-                    Slug = pair.Key,
-                    Text = pair.Value.Text
-                }
+                pair => WikiPage.Create(
+                    pair.Key,
+                    pair.Value.Text
+                )
             );
         }
 

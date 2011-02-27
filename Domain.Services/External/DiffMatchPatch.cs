@@ -2158,7 +2158,7 @@ namespace DiffMatchPatch {
      * @param patches List of Patch objects.
      * @return Text representation of patches.
      */
-    public string patch_toText(List<Patch> patches) {
+    public string patch_toText(IList<Patch> patches) {
       StringBuilder text = new StringBuilder();
       foreach (Patch aPatch in patches) {
         text.Append(aPatch);

@@ -22,10 +22,7 @@ namespace AshMind.LightWiki.Web.Controllers {
         public ActionResult Main(string slug) {
             var page = this.repository.Load(slug);
             if (page == null) {
-                page = new WikiPage {
-                    Slug = slug,
-                    Text = "Light wiki is light!"
-                };
+                page = WikiPage.Create(slug, "Light wiki is light!");
                 this.repository.Save(page);
             }
 

@@ -4,7 +4,14 @@
 <section id="left">
   @foreach (var slug in Model.PageSlugs) {
       var isCurrent = (slug == Model.CurrentPage.Slug);
-      @Html.ActionLink(slug, "Main", new { slug }, new { @class = "block-link" + (isCurrent ? " current" : "") })
+    
+      <a href="@Url.Action("Main", new { slug })" class="block-link@(isCurrent ? " current" : "")">
+          @slug
+
+          @if (isCurrent) {
+            <text>(<span id="revision">0</span>)</text>
+          }
+      </a>
   }
 </section>
 
