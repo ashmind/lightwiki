@@ -8,6 +8,22 @@ using DiffMatchPatch;
 
 namespace AshMind.LightWiki.Domain.Services {
     public class WikiPageUpdater {
+        #region PatchSets
+
+        private class PatchSets {
+            public bool AcceptForAuthor { get; private set; }
+            public IList<Patch> PatchesForAuthor { get; private set; }
+            public IList<Patch> PatchesForOthers { get; private set; }
+
+            public PatchSets(bool acceptForAuthor, IList<Patch> patchesForAuthor, IList<Patch> patchesForOthers) {
+                this.AcceptForAuthor = acceptForAuthor;
+                this.PatchesForAuthor = patchesForAuthor;
+                this.PatchesForOthers = patchesForOthers;
+            }
+        }
+
+        #endregion
+
         private readonly diff_match_patch patcher;
 
         public WikiPageUpdater(diff_match_patch patcher) {
@@ -18,75 +34,43 @@ namespace AshMind.LightWiki.Domain.Services {
             var versioned = ((VersionedWikiPage)page);
             var patches = this.patcher.patch_fromText(patchText);
             
-            var revisionPatches = (IList<Patch>)null;
+            var patchSets = (PatchSets)null;
             var revisionNumber = 0;
             lock (versioned) {
-                LockedUpdate(versioned, revisionToPatch, patches);
+                patchSets = LockedUpdate(versioned, revisionToPatch, patches);
                 revisionNumber = versioned.Revision.Number;
-                revisionPatches = versioned.Changes[revisionNumber];
             }
 
             return new WikiPageUpdateResult(
                 revisionNumber,
-                "",
-                this.patcher.patch_toText(revisionPatches)
+                patchSets.AcceptForAuthor,
+                this.patcher.patch_toText(patchSets.PatchesForAuthor),
+                this.patcher.patch_toText(patchSets.PatchesForOthers)
             );
         }
 
-        private void LockedUpdate(VersionedWikiPage page, int revisionToPatch, List<Patch> patches) {
-            /*if (revisionToPatch != page.Revision.Number)
-                this.LockedMergePatches(page, revisionToPatch, patches);*/
+        private PatchSets LockedUpdate(VersionedWikiPage page, int revisionToPatch, List<Patch> patches) {
+            var patchingCurrentRevision = revisionToPatch == page.RevisionNumber;
 
-            LockedPatchCurrentRevision(page, patches, regeneratePatches : revisionToPatch != page.Revision.Number);
-        }
-
-        // simple situation
-        private void LockedPatchCurrentRevision(VersionedWikiPage page, List<Patch> patches, bool regeneratePatches) {
             var previousText = page.Text;
             page.Revision = new WikiPageRevision(
                 page.RevisionNumber + 1,
                 (string)this.patcher.patch_apply(patches, previousText)[0]
             );
-            if (regeneratePatches)
-                patches = this.patcher.patch_make(previousText, page.Text);
-
-            page.Changes.Add(page.RevisionNumber, patches);
-        }
-
-        // complex situation
-        /*private void LockedMergePatches(VersionedWikiPage page, int revisionToPatch, IList<Patch> patches) {
-            for (var i = revisionToPatch + 1; i <= page.Revision.Number; i++) {
-                this.Merge(patches, page.Changes[i]);
+            if (patchingCurrentRevision) {
+                return new PatchSets(
+                    acceptForAuthor: true,
+                    patchesForAuthor: new Patch[0],
+                    patchesForOthers: patches
+                );
+            }
+            else {
+                return new PatchSets(
+                    acceptForAuthor: false,
+                    patchesForAuthor: this.patcher.patch_make(page.AllRevisions[revisionToPatch].Text, page.Text),
+                    patchesForOthers: this.patcher.patch_make(previousText, page.Text)
+                );
             }
         }
-
-        private void Merge(IList<Patch> patches, IList<Patch> precedingPatches) {
-            for (var i = 0; i < patches.Count; i++) {
-                var patch = patches[i];
-                foreach (var preceding in precedingPatches) {
-                    if (preceding.start1 > patch.start1 + patch.length1)
-                        break;
-
-                    bool keep;
-                    this.MergeActuallyPreceding(patch, preceding, out keep);
-
-                    if (!keep) {
-                        patches.RemoveAt(i);
-                        i -= 1;
-                    }
-                }
-            }
-        }
-
-        private void MergeActuallyPreceding(Patch patch, Patch preceding, out bool keep) {
-            if (preceding.start1 + preceding.length1 >= patch.start1 + patch.length1) {
-                keep = false;
-                return;
-            }
-
-            patch.start1 += preceding.length2 - preceding.length1;
-            patch.start2 += preceding.length2 - preceding.length1;
-            keep = true;
-        }*/
     }
 }

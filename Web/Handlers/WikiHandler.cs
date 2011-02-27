@@ -57,25 +57,41 @@ namespace AshMind.LightWiki.Web.Handlers {
 
         private void ProcessChange(string channelPrefix, string clientId, dynamic data) {
             var page = this.repository.Load(channelPrefix.SubstringAfterLast("/"));
-            var result = updater.Update(page, (int)data.revision, (string)data.patch);
+            var authorRevision = (int)data.revision;
+            var result = updater.Update(page, authorRevision, (string)data.patch);
 
             var syncChannel = channelPrefix + "/sync";
 
             var author = this.clientRepository.GetByID(clientId);
-            this.SendSyncMessage(
-                new[] { author },
-                syncChannel, result.RevisionNumber, result.PatchForAuthor
-            );
+            if (result.AcceptForAuthor) {
+                author.Enqueue(new Message {
+                    channel = syncChannel,
+                    data = new { accept = true }
+                });
+                author.FlushQueue();
+            }
+            else {
+                this.SendSyncMessage(
+                    new[] {author},
+                    syncChannel, authorRevision, result.RevisionNumber, result.PatchForAuthor
+                );
+            }
             this.SendSyncMessage(
                 this.clientRepository.WhereSubscribedTo(syncChannel).Except(author),
-                syncChannel, result.RevisionNumber, result.PatchForOthers
+                syncChannel, result.RevisionNumber - 1, result.RevisionNumber, result.PatchForOthers
             );
         }
 
-        private void SendSyncMessage(IEnumerable<IClient> clients, string channel, int revision, string patch) {
+        private void SendSyncMessage(IEnumerable<IClient> clients, string channel, int revisionFrom, int revisionTo, string patch) {
             var message = new Message {
                 channel = channel,
-                data = new { revision, patch }
+                data = new {
+                    revision = new {
+                        from = revisionFrom,
+                        to = revisionTo
+                    },
+                    patch
+                }
             };
 
             foreach (var client in clients) {

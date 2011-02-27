@@ -4,11 +4,9 @@
     _settings : null,
     
     _server : {
-        text : '',
-        revision: 0
-    },
-    _sent : {
-        text : ''
+        text :    '',
+        revision: 0,
+        pending : false
     },
     
     setup : function(settings) {
@@ -22,7 +20,6 @@
 
         this._server.text = settings.editor.html();
         this._server.revision = settings.serverRevision;
-        this._sent.text = this._server.text;
         
         $.cometd.configure({ url: settings.cometUrl });
         $.cometd.addListener('/meta/connect', this, this['/meta/connect']);
@@ -36,17 +33,20 @@
     
     _timer : function() {
         var html = this._editor.html();
-        if (html === this._sent.text)
+        if (html === this._server.text)
             return;
         
         this._settings.revisionContainer.text(this._server.revision + '+');
-
-        if (!this._connected)
+        this._sendChanges(html);
+    },
+    
+    _sendChanges : function(text) {
+        if (!this._connected || this._server.pending)
             return;
 
         var last = this._server.text;
         var patch = this._patcher.patch_toText(
-            this._patcher.patch_make(last, html)
+            this._patcher.patch_make(last, text)
         );
         
         $('body').addClass('sending');
@@ -54,12 +54,12 @@
             revision: this._server.revision,
             patch:    patch
         });
-        this._sent.text = html;
+        this._server.pending = { text : text };
 
         window.setTimeout(
             function() { $('body').removeClass('sending'); },
             500
-        );
+        );        
     },
     
     '/meta/connect' : function(message) {
@@ -85,17 +85,34 @@
     },
     
     '/wiki/?/sync' : function(message) {
-        var patch = this._patcher.patch_fromText(message.data.patch);
-        this._server.text = this._patcher.patch_apply(patch, this._server.text)[0];
-        this._server.revision = message.data.revision;
-        this._sent.text = this._server.text;
+        if (message.data.accept) {
+            this._server.text = this._server.pending.text;
+            this._server.revision += 1;
+            this._server.pending = false;
+            this._settings.revisionContainer.text(this._server.revision);
+            return;
+        }
+        
+        var revision = message.data.revision;
+        if (revision.from != this._server.revision)
+            return;
         
         var current = this._editor.html();
-        var patched = this._patcher.patch_apply(patch, current)[0];
+
+        var patch = this._patcher.patch_fromText(message.data.patch);
+        var newServerText = this._patcher.patch_apply(patch, this._server.text)[0];
+
+        var patchSinceThisRevision = this._patcher.patch_make(this._server.text, current);
+
+        this._server.text = newServerText;
+        this._server.revision = revision.to;
+        
+        var patched = this._patcher.patch_apply(patchSinceThisRevision, newServerText)[0];
         if (patched !== current)
             this._editor.html(patched);
         
         this._settings.revisionContainer.text(this._server.revision);
+        this._server.pending = false;
     },
     
     '/meta/disconnect' : function (message) {
