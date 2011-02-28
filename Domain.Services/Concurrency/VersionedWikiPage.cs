@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace AshMind.LightWiki.Domain.Services.Concurrency {
     internal class VersionedWikiPage : WikiPage {
         public VersionedWikiPage(string slug, string text) : base(slug) {
-            this.AllRevisions = new Dictionary<int, WikiPageRevision>();
+            this.AllRevisions = new ConcurrentDictionary<int, WikiPageRevision>();
             this.Revision = new WikiPageRevision(0, text);
         }
         
@@ -22,7 +23,7 @@ namespace AshMind.LightWiki.Domain.Services.Concurrency {
         }
 
         // this is *not* thread safe
-        public Dictionary<int, WikiPageRevision> AllRevisions { get; private set; }
+        public IDictionary<int, WikiPageRevision> AllRevisions { get; private set; }
 
         public override string Text {
             get { return this.Revision.Text; }

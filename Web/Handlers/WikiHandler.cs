@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Dynamic;
 using System.Linq;
 using AspComet;
@@ -49,43 +50,57 @@ namespace AshMind.LightWiki.Web.Handlers {
         public void ProcessEvent(PublishingEvent @event) {
             var action = @event.Channel.SubstringAfterLast("/");
             dynamic data = new DynamicDictionaryWrapper((IDictionary<string, object>)@event.Message.data);
-            if (action != "change")
-                return;
+            var channelPrefix = @event.Channel.SubstringBeforeLast("/");
+            var page = this.repository.Load(channelPrefix.SubstringAfterLast("/"));
 
-            this.ProcessChange(@event.Channel.SubstringBeforeLast("/"), @event.Message.clientId, data);
+            if (action == "change") {
+                this.ProcessChange(page, channelPrefix, @event.Message.clientId, data);
+            }
+            else if (action == "resync") {
+                this.ProcessResync(page, channelPrefix, @event.Message.clientId, data);
+            }
         }
 
-        private void ProcessChange(string channelPrefix, string clientId, dynamic data) {
-            var page = this.repository.Load(channelPrefix.SubstringAfterLast("/"));
+        private void ProcessResync(WikiPage page, string channelPrefix, string clientId, dynamic data) {
+            var sync = updater.GetUpdate(page, (int)data.revision);
+            var author = this.clientRepository.GetByID(clientId);
+            this.SendSyncMessage(
+                new[] { author },
+                channelPrefix + "/sync", true, (int)data.revision, sync.ResultRevisionNumber, sync.Patch
+            );
+        }
+
+        private void ProcessChange(WikiPage page, string channelPrefix, string clientId, dynamic data) {
             var authorRevision = (int)data.revision;
-            var result = updater.Update(page, authorRevision, (string)data.patch);
+            var result = updater.ApplyUpdate(page, authorRevision, (string)data.patch);
 
             var syncChannel = channelPrefix + "/sync";
 
             var author = this.clientRepository.GetByID(clientId);
-            if (result.AcceptForAuthor) {
-                author.Enqueue(new Message {
-                    channel = syncChannel,
-                    data = new { accept = true }
-                });
-                author.FlushQueue();
-            }
-            else {
-                this.SendSyncMessage(
-                    new[] {author},
-                    syncChannel, authorRevision, result.RevisionNumber, result.PatchForAuthor
-                );
-            }
+            this.SendSyncMessage(
+                new[] {author},
+                syncChannel, true, authorRevision, result.RevisionNumber, result.PatchForAuthor
+            );
+
+            if (!result.PatchForOthers.Any())
+                return;
+
             this.SendSyncMessage(
                 this.clientRepository.WhereSubscribedTo(syncChannel).Except(author),
-                syncChannel, result.RevisionNumber - 1, result.RevisionNumber, result.PatchForOthers
+                syncChannel, false, result.RevisionNumber - 1, result.RevisionNumber, result.PatchForOthers
             );
         }
 
-        private void SendSyncMessage(IEnumerable<IClient> clients, string channel, int revisionFrom, int revisionTo, string patch) {
+        private void SendSyncMessage(
+            IEnumerable<IClient> clients,
+            string channel, bool isReply, int revisionFrom, int revisionTo, string patch
+        ) {
+            Contract.Requires<ArgumentException>(isReply || !string.IsNullOrEmpty(patch));
+
             var message = new Message {
                 channel = channel,
                 data = new {
+                    isreply = isReply,
                     revision = new {
                         from = revisionFrom,
                         to = revisionTo

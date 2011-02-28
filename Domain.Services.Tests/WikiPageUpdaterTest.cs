@@ -22,8 +22,8 @@ namespace AshMind.LightWiki.Domain.Services.Tests {
             var page = new VersionedWikiPage("test", original);
             var updater = new WikiPageUpdater(patcher);
 
-            updater.Update(page, 0, patchOne);
-            updater.Update(page, 0, patchTwo);
+            updater.ApplyUpdate(page, 0, patchOne);
+            updater.ApplyUpdate(page, 0, patchTwo);
 
             Assert.AreEqual(expected, page.Text);
         }

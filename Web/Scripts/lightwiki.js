@@ -9,6 +9,11 @@
         pending : false
     },
     
+    _log : function() {
+        if (console)
+            console.log.apply(console, arguments);
+    },
+    
     setup : function(settings) {
         settings.syncInterval = settings.syncInterval || 1000;
         settings.editor = $(settings.editor);
@@ -41,8 +46,9 @@
     },
     
     _sendChanges : function(text) {
-        if (!this._connected || this._server.pending)
+        if (!this._connected || this._server.pending) {
             return;
+        }
 
         var last = this._server.text;
         var patch = this._patcher.patch_toText(
@@ -54,12 +60,8 @@
             revision: this._server.revision,
             patch:    patch
         });
-        this._server.pending = { text : text };
-
-        window.setTimeout(
-            function() { $('body').removeClass('sending'); },
-            500
-        );        
+        this._log("Local sent patch for ", this._server.revision, ":", patch, this._getTextStateForLog(text));
+        this._server.pending = { text : text };    
     },
     
     '/meta/connect' : function(message) {
@@ -85,34 +87,69 @@
     },
     
     '/wiki/?/sync' : function(message) {
-        if (message.data.accept) {
-            this._server.text = this._server.pending.text;
-            this._server.revision += 1;
-            this._server.pending = false;
-            this._settings.revisionContainer.text(this._server.revision);
+        var revision = message.data.revision;
+        if (message.data.patch) {
+            this._log(
+                "Server ",
+                (message.data.isreply ? "replied with" : "sent"),
+                " patch ",
+                revision.from, "=>", revision.to,
+                ":", message.data.patch
+            );
+        }
+        else if (message.data.isreply) {
+            this._log("Server confirmed change ", revision.from, "=>", revision.to);
+        }
+        else {
+            this._log("Invalid message ", revision.from, "=>", revision.to);
+        }
+        
+        if (revision.from != this._server.revision) {
+            this._log("Local ignored changes for ", revision.from, " since it has ", this._server.revision);
+            
+            if (revision.from > this._server.revision) {
+                $.cometd.publish('/wiki/' + this._settings.page + '/resync', {
+                    revision: this._server.revision
+                });
+                this._server.pending = true;
+                this._log("Local sent resync request for ", this._server.revision);
+            }
+
             return;
         }
         
-        var revision = message.data.revision;
-        if (revision.from != this._server.revision)
-            return;
+        if (message.data.patch) {
+            if (this._server.pending && !message.data.isreply) {
+                this._log("Local ignored changes for ", revision.from, " since it is waiting for reply.");
+                return;
+            }
+            
+            var current = this._editor.html();
+
+            var patch = this._patcher.patch_fromText(message.data.patch);
+            var newServerText = this._patcher.patch_apply(patch, this._server.text)[0];
+
+            var patchSinceThisRevision = this._patcher.patch_make(this._server.text, current);
         
-        var current = this._editor.html();
-
-        var patch = this._patcher.patch_fromText(message.data.patch);
-        var newServerText = this._patcher.patch_apply(patch, this._server.text)[0];
-
-        var patchSinceThisRevision = this._patcher.patch_make(this._server.text, current);
-
-        this._server.text = newServerText;
+            var patched = this._patcher.patch_apply(patchSinceThisRevision, newServerText)[0];
+            if (patched !== current)
+                this._editor.html(patched);
+        
+            this._server.text = newServerText;
+            this._log("Local merged changes ", revision.from, "=>", revision.to, this._getTextStateForLog(patched));
+        }
+        else if (message.data.isreply) {
+            this._server.text = this._server.pending.text;
+            this._log("Local accepted changes ", revision.from, "=>", revision.to, { serverText : this._server.text });
+        }
+        else {
+            throw "Invalid message"; 
+        }
+        
         this._server.revision = revision.to;
-        
-        var patched = this._patcher.patch_apply(patchSinceThisRevision, newServerText)[0];
-        if (patched !== current)
-            this._editor.html(patched);
-        
         this._settings.revisionContainer.text(this._server.revision);
-        this._server.pending = false;
+        if (message.data.isreply)
+            this._clearPending();
     },
     
     '/meta/disconnect' : function (message) {
@@ -121,6 +158,15 @@
             
         this._connected = false;
         this._unsubscribe();
+    },
+    
+    _getTextStateForLog : function(clientText) {
+        return { serverText : this._server.text, clientText : clientText };
+    },
+    
+    _clearPending : function () {
+        this._server.pending = false;
+        $('body').removeClass('sending');
     },
     
     _unsubscribe : function() {
