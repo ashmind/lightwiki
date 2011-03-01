@@ -12,13 +12,7 @@
                             .addClass('lightwriter')
                             .html(this._addMarkers(this._element.val()));
 
-        var cursor = this._cursor;
-        cursor.element = $("<div class='lightwriter-cursor'></div>").appendTo(this._surface).hide();
-        cursor.blinker = window.setInterval(function() {
-            if (!cursor.moved && cursor.visible)
-                cursor.element.toggle();
-            cursor.moved = false;
-        }, 600);
+        this._cursor = new lightwriter.cursor(this._surface);
         
         var thatData = { that : this };
         $('c', this._surface[0]).live('click', thatData, this._surfaceCharacterClick);
@@ -30,55 +24,129 @@
                      .keyup(thatData, this._elementKeyup);
     }
 
-    lightwriter.prototype = {
-        _cursor : {          
-            elementBefore : function() {
-                if (this.anchorLocation === 'before')
-                    return this.anchor;
+    lightwriter.cursor = function(surface) {
+        this._surface = surface;
+        this.element = $("<div class='lightwriter-cursor'></div>").appendTo(surface).hide();
 
-                return this.anchor.prev();
-            },
+        var that = this;
+        this.blinker = window.setInterval(function() {
+            if (!that.moved && that.visible)
+                that.element.toggle();
+                
+            that.moved = false;
+        }, 600);
+    };
 
-            elementAfter : function() {
-                if (this.anchorLocation === 'after')
-                    return this.anchor;
+    lightwriter.cursor.prototype = {
+        elementBefore : function() {
+            if (this.anchorLocation === 'before')
+                return this.anchor;
 
-                return this.anchor.next();
-            }
+            return this.anchor.prev();
         },
 
+        elementAfter : function() {
+            if (this.anchorLocation === 'after')
+                return this.anchor;
+
+            return this.anchor.next();
+        },
+        
+        update : function() {
+            this.moveTo(this.anchor);
+        },
+
+        moveBefore : function(character) {
+            this._moveTo(character, 'after');
+        },
+
+        moveAfter : function(character) {
+            this._moveTo(character, 'before');
+        },
+        
+        moveToTheStart: function() {
+            this.moveBefore(this._surface.find('c:first'));
+        },
+
+        moveToTheEnd : function() {
+            this.moveAfter(this._surface.find('c:last'));
+        },
+
+        _moveTo : function(character, characterLocation) {
+            var position = character.position();
+            var left;
+            if (characterLocation === 'before') {
+                var next = character.next();
+                left = next.length > 0
+                     ? next.position().left
+                     : position.left + character.width();
+            }
+            else {
+                var prev = character.prev();
+                if (prev.length > 0) {
+                    this._moveTo(prev, 'before');
+                    return;
+                }
+
+                left = position.left;                
+            }
+
+            this.element.css({
+                top : position.top + 'px',
+                left : left + 'px'
+            });
+
+            this.anchor = character;
+            this.anchorLocation = characterLocation;
+            this.moved = true;
+            this.element.show();            
+        },
+        
+        hide : function () {
+            this.visible = false;
+            this.element.hide();
+        },
+        
+        show : function () {
+            this.visible = true;
+        }
+    };
+
+    lightwriter.prototype = {
         keyHandlers : {
             /* backspace */ 8 : function() {
-                var after = this._cursor.elementAfter();
-                this._cursor.elementBefore().remove();
+                var cursor = this._cursor;
+                var after = cursor.elementAfter();
+                cursor.elementBefore().remove();
                 if (after.length > 0) {
-                    this._moveCursorBefore(after);
+                    cursor.moveBefore(after);
                 }
                 else {
-                    this._moveCursorToTheEnd();
+                    cursor.moveToTheEnd();
                 }
             },
             
             /* end */ 35 : function() {
-                this._moveCursorToTheEnd();
+                this._cursor.moveToTheEnd();
             },
             
             /* home */ 36 : function() {
-                this._moveCursorToTheStart();
+                this._cursor.moveToTheStart();
             },
 
             /* left */ 37 : function() {
-                this._moveCursorBefore(this._cursor.elementBefore());
+                this._cursor.moveBefore(this._cursor.elementBefore());
             },
 
             /* right */ 39 : function() {
-                this._moveCursorAfter(this._cursor.elementAfter());
+                this._cursor.moveAfter(this._cursor.elementAfter());
             },
 
             /* delete */ 46 : function() {
-                var before = this._cursor.elementBefore();
-                this._cursor.elementAfter().remove();
-                this._moveCursorAfter(before);
+                var cursor = this._cursor;
+                var before = cursor.elementBefore();
+                cursor.elementAfter().remove();
+                cursor.moveAfter(before);
             }
         },
 
@@ -87,14 +155,13 @@
         focus : function() {
             this._focused = true;
             this._element.focus();
-            this._cursor.visible = true;
+            this._cursor.show();
         },
 
         _elementBlur : function(e) {
             var that = e.data.that;
             that._focused = false;
-            that._cursor.visible = false;
-            that._cursor.element.hide();
+            that._cursor.hide();
         },
 
         _elementKeyup : function(e) {
@@ -129,7 +196,7 @@
             else {
                 that._cursor.elementAfter().before(newCharacter);
             }
-            that._moveCursorAfter(newCharacter);
+            that._cursor.moveAfter(newCharacter);
         },
 
         _surfaceCharacterClick : function(e) {
@@ -143,61 +210,11 @@
             var x = e.pageX - that._surface.offset().left;
 
             if (x < position.left + (width / 2)) {
-                that._moveCursorBefore(character);
+                that._cursor.moveBefore(character);
             }
             else {
-                that._moveCursorAfter(character);
+                that._cursor.moveAfter(character);
             }
-        },
-
-        _updateCursorPosition : function() {
-            this._moveCursorTo(this._cursor.anchor);
-        },
-
-        _moveCursorBefore : function(character) {
-            this._moveCursorTo(character, 'after');
-        },
-
-        _moveCursorAfter : function(character) {
-            this._moveCursorTo(character, 'before');
-        },
-        
-        _moveCursorToTheStart: function() {
-            this._moveCursorBefore(this._surface.find('c:first'));
-        },
-
-        _moveCursorToTheEnd : function() {
-            this._moveCursorAfter(this._surface.find('c:last'));
-        },
-
-        _moveCursorTo : function(character, characterLocation) {
-            var position = character.position();
-            var left;
-            if (characterLocation === 'before') {
-                var next = character.next();
-                left = next.length > 0
-                     ? next.position().left
-                     : position.left + character.width();
-            }
-            else {
-                var prev = character.prev();
-                if (prev.length > 0) {
-                    this._moveCursorTo(prev, 'before');
-                    return;
-                }
-
-                left = position.left;                
-            }
-
-            this._cursor.element.css({
-                top : position.top + 'px',
-                left : left + 'px'
-            });
-
-            this._cursor.anchor = character;
-            this._cursor.anchorLocation = characterLocation;
-            this._cursor.moved = true;
-            this._cursor.element.show();            
         },
     
         _addMarkers : function(text) {
