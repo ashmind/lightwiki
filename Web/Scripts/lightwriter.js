@@ -12,18 +12,26 @@
                             .addClass('lightwriter')
                             .html(this._addMarkers(this._element.val()));
 
-        var that = this;
-        this._cursor.element = $("<div class='lightwriter-cursor'></div>").appendTo(this._surface);
-
+        var cursor = this._cursor;
+        cursor.element = $("<div class='lightwriter-cursor'></div>").appendTo(this._surface).hide();
+        cursor.blinker = window.setInterval(function() {
+            if (!cursor.moved && cursor.visible)
+                cursor.element.toggle();
+            cursor.moved = false;
+        }, 600);
+        
         var thatData = { that : this };
         $('c', this._surface[0]).live('click', thatData, this._surfaceCharacterClick);
+        this._surface.click(function(e) {
+            e.preventDefault();
+        });
         this._element.blur(thatData, this._elementBlur)
                      .keypress(thatData, this._elementKeypress)
                      .keyup(thatData, this._elementKeyup);
     }
 
     lightwriter.prototype = {
-        _cursor : {
+        _cursor : {          
             elementBefore : function() {
                 if (this.anchorLocation === 'before')
                     return this.anchor;
@@ -50,6 +58,14 @@
                     this._moveCursorToTheEnd();
                 }
             },
+            
+            /* end */ 35 : function() {
+                this._moveCursorToTheEnd();
+            },
+            
+            /* home */ 36 : function() {
+                this._moveCursorToTheStart();
+            },
 
             /* left */ 37 : function() {
                 this._moveCursorBefore(this._cursor.elementBefore());
@@ -71,19 +87,14 @@
         focus : function() {
             this._focused = true;
             this._element.focus();
-
-            var cursor = this._cursor;
-            cursor.blinker = window.setInterval(function() {
-                if (!cursor.moved)
-                    cursor.element.toggle();
-                cursor.moved = false;
-            }, 600);
+            this._cursor.visible = true;
         },
 
         _elementBlur : function(e) {
             var that = e.data.that;
             that._focused = false;
-            window.clearInterval(that._cursor.blinker);
+            that._cursor.visible = false;
+            that._cursor.element.hide();
         },
 
         _elementKeyup : function(e) {
@@ -131,7 +142,7 @@
 
             var x = e.pageX - that._surface.offset().left;
 
-            if (x < position + (width / 2)) {
+            if (x < position.left + (width / 2)) {
                 that._moveCursorBefore(character);
             }
             else {
@@ -149,6 +160,10 @@
 
         _moveCursorAfter : function(character) {
             this._moveCursorTo(character, 'before');
+        },
+        
+        _moveCursorToTheStart: function() {
+            this._moveCursorBefore(this._surface.find('c:first'));
         },
 
         _moveCursorToTheEnd : function() {
