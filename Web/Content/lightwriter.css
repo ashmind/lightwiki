@@ -1,0 +1,9 @@
+﻿.lightwriter {
+    cursor: text;
+}
+
+.lightwriter-cursor {
+    position: absolute;
+    height: 25px;
+    border-left: 1px solid black;
+}
