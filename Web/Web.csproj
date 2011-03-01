@@ -145,6 +145,7 @@
     <Content Include="Scripts\jquery.ba-throttle-debounce.min.js" />
     <Content Include="Scripts\jquery.cometd.js" />
     <Content Include="Scripts\json2.js" />
+    <Content Include="Scripts\lightwriter.js" />
     <Content Include="Scripts\lightwiki.js" />
     <Content Include="Scripts\rangy-core.js" />
     <Content Include="Scripts\rangy-core.min.js" />

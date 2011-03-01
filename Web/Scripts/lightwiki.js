@@ -16,14 +16,13 @@
     
     setup : function(settings) {
         settings.syncInterval = settings.syncInterval || 1000;
-        settings.editor = $(settings.editor);
         settings.revisionContainer = $(settings.revisionContainer);
         
         this._settings = settings;
         this._editor = settings.editor;
         this._patcher = new diff_match_patch();
 
-        this._server.text = settings.editor.html();
+        this._server.text = settings.editor.getText();
         this._server.revision = settings.serverRevision;
         
         $.cometd.configure({ url: settings.cometUrl });
@@ -37,12 +36,12 @@
     },
     
     _timer : function() {
-        var html = this._editor.html();
-        if (html === this._server.text)
+        var text = this._editor.getText();
+        if (text === this._server.text)
             return;
         
         this._settings.revisionContainer.text(this._server.revision + '+');
-        this._sendChanges(html);
+        this._sendChanges(text);
     },
     
     _sendChanges : function(text) {
@@ -124,7 +123,7 @@
                 return;
             }
             
-            var current = this._editor.html();
+            var current = this._editor.getText();
 
             var patch = this._patcher.patch_fromText(message.data.patch);
             var newServerText = this._patcher.patch_apply(patch, this._server.text)[0];
@@ -133,7 +132,7 @@
         
             var patched = this._patcher.patch_apply(patchSinceThisRevision, newServerText)[0];
             if (patched !== current)
-                this._editor.html(patched);
+                this._editor.setText(patched);
         
             this._server.text = newServerText;
             this._log("Local merged changes ", revision.from, "=>", revision.to, this._getTextStateForLog(patched));
