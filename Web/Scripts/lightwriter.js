@@ -188,7 +188,11 @@
                 return;
             }
 
-            var newCharacter = $('<c>' + String.fromCharCode(e.which) + '</c>');
+            var newCharacter = String.fromCharCode(e.which);
+            if (newCharacter === ' ')
+                newCharacter = '&nbsp;';
+            
+            newCharacter = $('<c>' + newCharacter + '</c>');
             var before = that._cursor.elementBefore();
             if (before.length > 0) {
                 before.after(newCharacter);
