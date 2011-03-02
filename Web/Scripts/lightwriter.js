@@ -1,4 +1,19 @@
-﻿(function($) {   
+﻿(function($) {
+    $.fn.textNodes = function() {
+        var ret = [];
+        this.contents().each(function recurse() {
+            if (this.nodeType == 3) { 
+                ret.push(this);
+            }
+            else {
+                $(this).contents().each(recurse);
+            }
+        });
+        return $(ret);
+    }
+})(jQuery);
+
+(function($) {
     $.fn.lightwriter = function() {
         this.each(function() {
             new lightwriter(this);
@@ -9,8 +24,9 @@
     function lightwriter(element) {
         this._element = $(element);
         this._surface = this._overlay(this._element)
-                            .addClass('lightwriter')
-                            .html(this._addMarkers(this._element.val()));
+                            .addClass('lightwriter');
+
+        this._html(this._element.val());
 
         this._cursor = new lightwriter.cursor(this._surface);
         this._selection = new lightwriter.selection(this._surface);
@@ -159,7 +175,7 @@
         _eachBetween : function(first, second, action) {
             var between = false;
             var swap = false;
-            this._surface.children().each(function() {
+            this._surface.find('c, br').each(function() {
                 if (this === first[0]) {
                     between = true;
                 }
@@ -379,22 +395,24 @@
             }
         },
     
-        _addMarkers : function(text) {
-            var result = [];
-            for (var i = 0; i < text.length; i++) {
-                var c = text.charAt(i);
+        _html : function(html) {
+            this._surface.html(html);
+            this._surface.textNodes().each(function() {
+                var node = $(this);
+                var result = [];
+                var text = node.text();
+                for (var i = 0; i < text.length; i++) {
+                    var c = text.charAt(i);
 
-                if (c !== '\r' && c !== '\n') {
-                    result.push("<c>");
-                    result.push(c);
-                    result.push("</c>");
+                    if (c !== '\r' && c !== '\n') {
+                        result.push("<c>");
+                        result.push(c);
+                        result.push("</c>");
+                    }
                 }
-                else if (c === '\n' || (c === '\r' && text.charAt(i + 1) !== '\n')) {
-                    result.push('<br/>');
-                }
-            }
         
-            return result.join('');
+                node.replaceWith(result.join(''));
+            });
         },
     
         _overlay : function (target) {
