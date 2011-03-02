@@ -128,11 +128,7 @@
 
     lightwriter.selection.prototype = {
         startAt : function(character) {
-            if (this.visible) {
-                this.eachElement(function(element) {
-                    element.removeClass('selected');
-                });
-            }
+            this.hide();
 
             this.visible = true;
             this.expanding = true;
@@ -202,6 +198,11 @@
         },
 
         hide : function() {
+            if (this.visible) {
+                this.eachElement(function(element) {
+                    element.removeClass('selected');
+                });
+            }
             this.visible = false;
         }
     };
@@ -236,18 +237,30 @@
             },
             
             /* end */ 35 : function() {
+                this._selection.hide();
                 this._cursor.moveToTheEnd();
             },
             
             /* home */ 36 : function() {
+                this._selection.hide();
                 this._cursor.moveToTheStart();
             },
 
             /* left */ 37 : function() {
+                if (this._selection.visible) {
+                    this._collapseSelectionTo('start');
+                    return;
+                }
+
                 this._cursor.moveBefore(this._cursor.elementBefore());
             },
 
             /* right */ 39 : function() {
+                if (this._selection.visible) {
+                    this._collapseSelectionTo('end');
+                    return;
+                }
+
                 this._cursor.moveAfter(this._cursor.elementAfter());
             },
 
@@ -408,6 +421,17 @@
             });
             this._selection.hide();
             this._cursor.show();
-        }
+        },
+
+        _collapseSelectionTo : function(to) {
+            if (to === 'end') {
+                this._cursor.moveAfter(this._selection.endElement());
+            }
+            else {
+                this._cursor.moveBefore(this._selection.startElement());
+            }
+            this._selection.hide();
+            this._cursor.show();
+        },
     };
 })(jQuery);
