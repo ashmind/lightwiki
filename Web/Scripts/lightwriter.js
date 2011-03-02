@@ -48,7 +48,7 @@
 
     lightwriter.cursor = function(surface) {
         this._surface = surface;
-        this.element = $("<div class='lightwriter-cursor'></div>").appendTo(surface).hide();
+        this.element = $("<div class='lightwriter-cursor lightwriter-system'></div>").appendTo(surface).hide();
 
         var that = this;
         this.blinker = window.setInterval(function() {
@@ -238,6 +238,7 @@
                     cursor.elementBefore().remove();
                 }
                 
+                this._cleanEmptyTags();
                 if (after.length > 0) {
                     cursor.moveBefore(after);
                 }
@@ -292,6 +293,7 @@
                     cursor.elementAfter().remove();
                 }
 
+                this._cleanEmptyTags();
                 cursor.moveAfter(anchor);
             }
         },
@@ -456,5 +458,14 @@
             this._selection.hide();
             this._cursor.show();
         },
+
+        _cleanEmptyTags : function() {
+            var whitespace = /^\s*$/;
+
+            this._surface.find(':not(c,br,.lightwriter-system)').filter(function() {
+                return whitespace.test($(this).text());
+            }).remove();
+            this._surface.find('ul:empty').remove();
+        }
     };
 })(jQuery);
