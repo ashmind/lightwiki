@@ -42,14 +42,14 @@
             if (this.anchorLocation === 'before')
                 return this.anchor;
 
-            return this.anchor.prev('c');
+            return this.anchor.prev();
         },
 
         elementAfter : function() {
             if (this.anchorLocation === 'after')
                 return this.anchor;
 
-            return this.anchor.next('c');
+            return this.anchor.next();
         },
         
         moveForward : function() {
@@ -57,47 +57,50 @@
         },
 
         moveBefore : function(character) {
-            this._moveTo(character, 'after');
+            this._moveTo('before', character);
         },
 
         moveAfter : function(character) {
-            this._moveTo(character, 'before');
+            this._moveTo('after', character);
         },
         
         moveToTheStart: function() {
-            this.moveBefore(this._surface.find('c:first'));
+            this.moveBefore(this._surface.find(':first'));
         },
 
         moveToTheEnd : function() {
-            this.moveAfter(this._surface.find('c:last'));
+            this.moveAfter(this._surface.find(':last'));
         },
 
-        _moveTo : function(character, characterLocation) {
-            var position = character.position();
-            var left;
-            if (characterLocation === 'before') {
+        _moveTo : function(cursorLocation, character) {
+            var position = {};
+            if (cursorLocation === 'after') {
                 var next = character.next('c');
-                left = next.length > 0
-                     ? next.position().left
-                     : position.left + character.width();
+                if (next.length > 0) {
+                    position = next.position();
+                }
+                else {
+                    position = character.position();
+                    position.left += character.width();
+                } 
             }
             else {
                 var prev = character.prev('c');
                 if (prev.length > 0) {
-                    this._moveTo(prev, 'before');
+                    this.moveAfter(prev);
                     return;
                 }
 
-                left = position.left;                
+                position = character.position();
             }
 
             this.element.css({
                 top : position.top + 'px',
-                left : left + 'px'
+                left : position.left + 'px'
             });
 
             this.anchor = character;
-            this.anchorLocation = characterLocation;
+            this.anchorLocation = (cursorLocation === 'after') ? 'before' : 'after';
             this.moved = true;
             this.element.show();            
         },
@@ -128,7 +131,7 @@
             
             /* enter */ 13 : function() {
                 var cursor = this._cursor;
-                cursor.elementBefore().after('<c><br/></c>');
+                cursor.elementBefore().after('<br/>');
                 cursor.moveForward();
             },
             
