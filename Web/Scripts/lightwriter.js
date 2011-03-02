@@ -396,19 +396,24 @@
         },
     
         _html : function(html) {
+            var whitespace = /^\s*$/;
+
             this._surface.html(html);
             this._surface.textNodes().each(function() {
                 var node = $(this);
                 var result = [];
                 var text = node.text();
+                if (whitespace.test(text))
+                    return;                    
+
                 for (var i = 0; i < text.length; i++) {
                     var c = text.charAt(i);
+                    if (c === '\r' || c === '\n')
+                        c = ' ';
 
-                    if (c !== '\r' && c !== '\n') {
-                        result.push("<c>");
-                        result.push(c);
-                        result.push("</c>");
-                    }
+                    result.push("<c>");
+                    result.push(c);
+                    result.push("</c>");
                 }
         
                 node.replaceWith(result.join(''));
