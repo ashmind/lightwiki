@@ -144,26 +144,47 @@
         },
 
         expandTo : function(character) {
-            this._eachBetween(
+            if (character.hasClass('selected'))
+                return;
+
+            var scanResult = this._eachBetween(
                 this._end, character,
                 function(element) {
                     element.addClass('selected');
                 }
             );
-            this._end = character;
+
+            if (!scanResult.swap) {
+                this._end = character;
+            }
+            else {
+                this._start = character;
+            }
         },
 
         _eachBetween : function(first, second, action) {
             var between = false;
+            var swap = false;
             this._surface.find('c').each(function() {
-                if (this === first[0])
+                if (this === first[0]) {
                     between = true;
+                }
+                else if (this === second[0] && !between) {
+                    var temp = first;
+                    first = second;
+                    second = temp;
+
+                    between = true;
+                    swap = true;
+                }
 
                 if (between)
                     action($(this));
 
                 return this !== second[0];
             });
+
+            return { swap : swap };
         },
 
         stop : function() {
