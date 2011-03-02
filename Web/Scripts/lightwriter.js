@@ -21,7 +21,7 @@
         });
         this._element.blur(thatData, this._elementBlur)
                      .keypress(thatData, this._elementKeypress)
-                     .keyup(thatData, this._elementKeyup);
+                     .keydown(thatData, this._elementKeydown);
     }
 
     lightwriter.cursor = function(surface) {
@@ -173,16 +173,16 @@
             that._cursor.hide();
         },
 
-        _elementKeyup : function(e) {
-            /*var that = e.data.that;
+        _elementKeydown : function(e) {
+            var that = e.data.that;
             if (!that._focused)
                 return;
 
             var handler = that.keyHandlers[e.which];
-                        
-            e.preventDefault();
-            if (handler)
-                handler.call(that);*/
+            if (handler) {
+                e.preventDefault();
+                handler.call(that);
+            }
         },
 
         _elementKeypress : function(e) {
@@ -191,11 +191,14 @@
                 return;
             
             e.preventDefault();
-            var handler = that.keyHandlers[e.keyCode];
+            /*var handler = that.keyHandlers[e.keyCode];
             if (handler) {
                 handler.call(that);
                 return;
-            }
+            }*/
+
+            if (that.keyHandlers[e.keyCode])
+                return;
 
             var newCharacter = String.fromCharCode(e.which);            
             newCharacter = $('<c>' + newCharacter + '</c>');
@@ -248,7 +251,7 @@
         _overlay : function (target) {
             var surface = $('<div></div>');
             var position = target.position();
-            target.css({opacity: '0'});
+            target.css({ opacity: 0 });
             return surface.css({
                 position:       'absolute',
                 left:           position.left + 'px',
