@@ -7,3 +7,8 @@
     height: 25px;
     border-left: 1px solid black;
 }
+
+c {
+    display: inline;
+    white-space: pre-wrap;
+}

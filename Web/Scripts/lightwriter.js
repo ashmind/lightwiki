@@ -65,11 +65,11 @@
         },
         
         moveToTheStart: function() {
-            this.moveBefore(this._surface.find(':first'));
+            this.moveBefore(this._surface.find('c:first'));
         },
 
         moveToTheEnd : function() {
-            this.moveAfter(this._surface.find(':last'));
+            this.moveAfter(this._surface.find('c:last'));
         },
 
         _moveTo : function(cursorLocation, character) {
@@ -197,10 +197,7 @@
                 return;
             }
 
-            var newCharacter = String.fromCharCode(e.which);
-            if (newCharacter === ' ')
-                newCharacter = '&nbsp;';
-            
+            var newCharacter = String.fromCharCode(e.which);            
             newCharacter = $('<c>' + newCharacter + '</c>');
             var before = that._cursor.elementBefore();
             if (before.length > 0) {
@@ -234,13 +231,14 @@
             var result = [];
             for (var i = 0; i < text.length; i++) {
                 var c = text.charAt(i);
-            
-                result.push("<c>");
-                result.push(c !== ' ' ? c : '&nbsp;');
-                result.push("</c>");
-                
-                if (c === '\n' || (c === '\r' && text.charAt(i + 1) !== '\n')) {
-                    result.push("<br/>");
+
+                if (c !== '\r' && c !== '\n') {
+                    result.push("<c>");
+                    result.push(c);
+                    result.push("</c>");
+                }
+                else if (c === '\n' || (c === '\r' && text.charAt(i + 1) !== '\n')) {
+                    result.push('<br/>');
                 }
             }
         
@@ -250,13 +248,19 @@
         _overlay : function (target) {
             var surface = $('<div></div>');
             var position = target.position();
+            target.css({opacity: '0'});
             return surface.css({
-                position: 'absolute',
-                left:     position.left + 'px',
-                top:      position.top + 100 + 'px',
-                width:    target.width() + 'px',
-                height:   target.height() + 'px'
-            }).appendTo(target.parent());
+                position:       'absolute',
+                left:           position.left + 'px',
+                top:            position.top + 'px',
+                width:          target.width() + 'px',
+                height:         target.height() + 'px',
+
+                'padding-left':   target.css('padding-left'),
+                'padding-top':    target.css('padding-top'),
+                'padding-right':  target.css('padding-right'),
+                'padding-bottom': target.css('padding-bottom'),
+            }).appendTo(target.parent());            
         }
     };
 })(jQuery);
