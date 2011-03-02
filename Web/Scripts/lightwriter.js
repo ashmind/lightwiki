@@ -210,8 +210,17 @@
         keyHandlers : {
             /* backspace */ 8 : function() {
                 var cursor = this._cursor;
-                var after = cursor.elementAfter();
-                cursor.elementBefore().remove();
+
+                var anchor;                
+                if (this._selection.visible) {
+                    anchor = this._selection.endElement().next();
+                    this._deleteSelection();
+                }
+                else {                    
+                    anchor = cursor.elementAfter();
+                    cursor.elementBefore().remove();
+                }
+                
                 if (after.length > 0) {
                     cursor.moveBefore(after);
                 }
@@ -247,11 +256,7 @@
                 var anchor;
                 if (this._selection.visible) {
                     anchor = this._selection.startElement().prev();
-                    this._selection.eachElement(function(element) {
-                        element.remove();
-                    });
-                    this._selection.hide();
-                    this._cursor.show();
+                    this._deleteSelection();
                 }
                 else {
                     anchor = cursor.elementBefore();
@@ -395,6 +400,14 @@
                 'padding-right':  target.css('padding-right'),
                 'padding-bottom': target.css('padding-bottom'),
             }).appendTo(target.parent());            
+        },
+
+        _deleteSelection : function() {
+            this._selection.eachElement(function(element) {
+                element.remove();
+            });
+            this._selection.hide();
+            this._cursor.show();
         }
     };
 })(jQuery);
