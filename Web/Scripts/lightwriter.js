@@ -42,18 +42,18 @@
             if (this.anchorLocation === 'before')
                 return this.anchor;
 
-            return this.anchor.prev();
+            return this.anchor.prev('c');
         },
 
         elementAfter : function() {
             if (this.anchorLocation === 'after')
                 return this.anchor;
 
-            return this.anchor.next();
+            return this.anchor.next('c');
         },
         
-        update : function() {
-            this.moveTo(this.anchor);
+        moveForward : function() {
+            this.moveAfter(this.elementAfter());
         },
 
         moveBefore : function(character) {
@@ -76,13 +76,13 @@
             var position = character.position();
             var left;
             if (characterLocation === 'before') {
-                var next = character.next();
+                var next = character.next('c');
                 left = next.length > 0
                      ? next.position().left
                      : position.left + character.width();
             }
             else {
-                var prev = character.prev();
+                var prev = character.prev('c');
                 if (prev.length > 0) {
                     this._moveTo(prev, 'before');
                     return;
@@ -124,6 +124,12 @@
                 else {
                     cursor.moveToTheEnd();
                 }
+            },
+            
+            /* enter */ 13 : function() {
+                var cursor = this._cursor;
+                cursor.elementBefore().after('<c><br/></c>');
+                cursor.moveForward();
             },
             
             /* end */ 35 : function() {
@@ -223,19 +229,17 @@
     
         _addMarkers : function(text) {
             var result = [];
-            result.push("<p>");
             for (var i = 0; i < text.length; i++) {
                 var c = text.charAt(i);
             
                 result.push("<c>");
                 result.push(c !== ' ' ? c : '&nbsp;');
                 result.push("</c>");
-            
+                
                 if (c === '\n' || (c === '\r' && text.charAt(i + 1) !== '\n')) {
-                    result.push("</p><p>");
+                    result.push("<br/>");
                 }
             }
-            result.push("</p>");
         
             return result.join('');
         },
