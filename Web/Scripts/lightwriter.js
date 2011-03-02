@@ -128,16 +128,14 @@
 
     lightwriter.selection.prototype = {
         startAt : function(character) {
-            if (this._start) {
-                this._eachBetween(
-                    this._start, this._end,
-                    function(element) {
-                        element.removeClass('selected');
-                    }
-                );
+            if (this.visible) {
+                this.eachElement(function(element) {
+                    element.removeClass('selected');
+                });
             }
 
-            this.active = true;
+            this.visible = true;
+            this.expanding = true;
             this._start = character;
             this._start.addClass('selected');
             this._end = character;
@@ -165,7 +163,7 @@
         _eachBetween : function(first, second, action) {
             var between = false;
             var swap = false;
-            this._surface.find('c').each(function() {
+            this._surface.children().each(function() {
                 if (this === first[0]) {
                     between = true;
                 }
@@ -187,8 +185,24 @@
             return { swap : swap };
         },
 
+        eachElement : function(action) {
+            this._eachBetween(this._start, this._end, action); 
+        },
+
+        startElement : function() {
+            return this._start; 
+        },
+
+        endElement : function() {
+            return this._end;
+        },
+
         stop : function() {
-            this.active = false;
+            this.expanding = false;
+        },
+
+        hide : function() {
+            this.visible = false;
         }
     };
 
@@ -230,23 +244,39 @@
 
             /* delete */ 46 : function() {
                 var cursor = this._cursor;
-                var before = cursor.elementBefore();
-                cursor.elementAfter().remove();
-                cursor.moveAfter(before);
+                var anchor;
+                if (this._selection.visible) {
+                    anchor = this._selection.startElement().prev();
+                    this._selection.eachElement(function(element) {
+                        element.remove();
+                    });
+                    this._selection.hide();
+                    this._cursor.show();
+                }
+                else {
+                    anchor = cursor.elementBefore();
+                    cursor.elementAfter().remove();
+                }
+
+                cursor.moveAfter(anchor);
             }
         },
 
         _focused : false,
 
-        focus : function() {
+        focus : function() {            
             this._focused = true;
+            this._surface.addClass('active');
             this._element.focus();
-            this._cursor.show();
+            if (!this._selection.visible)
+                this._cursor.show();
         },
 
         _elementBlur : function(e) {
             var that = e.data.that;
+
             that._focused = false;
+            that._surface.removeClass('active');
             that._cursor.hide();
         },
 
@@ -289,8 +319,9 @@
             that._cursor.moveAfter(newCharacter);
         },
         
-        _surfaceCharacterMousedown : function(e) {
+        _surfaceCharacterMousedown : function(e) {            
             var that = e.data.that;
+            that.focus();
             that._selection.startAt($(this));
             that._cursor.hide();
             e.preventDefault();
@@ -298,15 +329,17 @@
 
         _surfaceCharacterMousemove : function(e) {
             var selection = e.data.that._selection;
-            if (selection.active)
+            if (selection.expanding)
                 selection.expandTo($(this));
         },
 
         _surfaceMouseup : function(e) {
             var that = e.data.that;
+            that.focus();
 
             that._selection.stop();
-            that._cursor.show();
+            if (!that._selection.visible)
+                that._cursor.show();
             e.preventDefault();
         },
 

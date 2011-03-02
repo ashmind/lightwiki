@@ -15,5 +15,9 @@
 }
 
 .lightwriter c.selected {
+    background-color: #EEEEEE;
+}
+
+.lightwriter.active c.selected {
     background-color: #D6E0F4;
 }
