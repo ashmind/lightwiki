@@ -13,12 +13,18 @@
                             .html(this._addMarkers(this._element.val()));
 
         this._cursor = new lightwriter.cursor(this._surface);
+        this._selection = new lightwriter.selection(this._surface);
         
         var thatData = { that : this };
-        $('c', this._surface[0]).live('click', thatData, this._surfaceCharacterClick);
-        this._surface.click(function(e) {
-            e.preventDefault();
-        });
+        $('c', this._surface[0]).live('click', thatData, this._surfaceCharacterClick)
+                                .live('mousedown', thatData, this._surfaceCharacterMousedown)
+                                .live('mousemove', thatData, this._surfaceCharacterMousemove);
+
+        var preventDefault = function(e) { e.preventDefault(); };
+        this._surface.click(preventDefault)
+                     .mousedown(preventDefault)
+                     .mouseup(thatData, this._surfaceMouseup);
+
         this._element.blur(thatData, this._elementBlur)
                      .keypress(thatData, this._elementKeypress)
                      .keydown(thatData, this._elementKeydown);
@@ -112,6 +118,56 @@
         
         show : function () {
             this.visible = true;
+        }
+    };
+
+    lightwriter.selection = function(surface) {
+        this._surface = surface;
+        this.active = false;
+    };
+
+    lightwriter.selection.prototype = {
+        startAt : function(character) {
+            if (this._start) {
+                this._eachBetween(
+                    this._start, this._end,
+                    function(element) {
+                        element.removeClass('selected');
+                    }
+                );
+            }
+
+            this.active = true;
+            this._start = character;
+            this._start.addClass('selected');
+            this._end = character;
+        },
+
+        expandTo : function(character) {
+            this._eachBetween(
+                this._end, character,
+                function(element) {
+                    element.addClass('selected');
+                }
+            );
+            this._end = character;
+        },
+
+        _eachBetween : function(first, second, action) {
+            var between = false;
+            this._surface.find('c').each(function() {
+                if (this === first[0])
+                    between = true;
+
+                if (between)
+                    action($(this));
+
+                return this !== second[0];
+            });
+        },
+
+        stop : function() {
+            this.active = false;
         }
     };
 
@@ -210,6 +266,27 @@
                 that._cursor.elementAfter().before(newCharacter);
             }
             that._cursor.moveAfter(newCharacter);
+        },
+        
+        _surfaceCharacterMousedown : function(e) {
+            var that = e.data.that;
+            that._selection.startAt($(this));
+            that._cursor.hide();
+            e.preventDefault();
+        },
+
+        _surfaceCharacterMousemove : function(e) {
+            var selection = e.data.that._selection;
+            if (selection.active)
+                selection.expandTo($(this));
+        },
+
+        _surfaceMouseup : function(e) {
+            var that = e.data.that;
+
+            that._selection.stop();
+            that._cursor.show();
+            e.preventDefault();
         },
 
         _surfaceCharacterClick : function(e) {

@@ -1,5 +1,6 @@
 ﻿.lightwriter {
     cursor: text;
+    -moz-user-select: none;
 }
 
 .lightwriter-cursor {
@@ -8,7 +9,11 @@
     border-left: 1px solid black;
 }
 
-c {
+.lightwriter c {
     display: inline;
     white-space: pre-wrap;
+}
+
+.lightwriter c.selected {
+    background-color: #D6E0F4;
 }
