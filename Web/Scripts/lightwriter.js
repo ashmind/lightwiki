@@ -2,7 +2,7 @@
     $.fn.textNodes = function() {
         var ret = [];
         this.contents().each(function recurse() {
-            if (this.nodeType == 3) { 
+            if (this.nodeType == 3) {
                 ret.push(this);
             }
             else {
@@ -10,7 +10,7 @@
             }
         });
         return $(ret);
-    }
+    };
 })(jQuery);
 
 (function($) {
@@ -95,7 +95,7 @@
         },
 
         _moveTo : function(cursorLocation, character) {
-            var position = {};
+            var position;
             if (cursorLocation === 'after') {
                 var next = character.next('c');
                 if (next.length > 0) {
@@ -149,7 +149,6 @@
             this.visible = true;
             this.expanding = true;
             this._start = character;
-            this._start.addClass('selected');
             this._end = character;
         },
 
@@ -239,8 +238,8 @@
                 }
                 
                 this._cleanEmptyTags();
-                if (after.length > 0) {
-                    cursor.moveBefore(after);
+                if (anchor.length > 0) {
+                    cursor.moveBefore(anchor);
                 }
                 else {
                     cursor.moveToTheEnd();
@@ -436,7 +435,7 @@
                 'padding-left':   target.css('padding-left'),
                 'padding-top':    target.css('padding-top'),
                 'padding-right':  target.css('padding-right'),
-                'padding-bottom': target.css('padding-bottom'),
+                'padding-bottom': target.css('padding-bottom')
             }).appendTo(target.parent());            
         },
 
