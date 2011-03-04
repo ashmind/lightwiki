@@ -145,29 +145,32 @@
     lightwriter.selection.prototype = {
         startAt : function(character) {
             this.hide();
-
-            this.visible = true;
             this.expanding = true;
             this._start = character;
             this._end = character;
         },
 
-        expandTo : function(character) {
-            if (character.hasClass('selected'))
+        attemptExpand : function(characterUnderPointer) {
+            if (characterUnderPointer.hasClass('selected'))
                 return;
 
+            if (characterUnderPointer === this._start && this._start === this._end)
+                return;
+            
+            this.visible = true;
+            var prev = characterUnderPointer.prev();
             var scanResult = this._eachBetween(
-                this._end, character,
-                function(element) {
+                this._end, prev,
+                function(element) {                    
                     element.addClass('selected');
                 }
             );
 
             if (!scanResult.swap) {
-                this._end = character;
+                this._end = prev;
             }
             else {
-                this._start = character;
+                this._start = prev;
             }
         },
 
@@ -363,9 +366,11 @@
         },
 
         _surfaceCharacterMousemove : function(e) {
-            var selection = e.data.that._selection;
-            if (selection.expanding)
-                selection.expandTo($(this));
+            var that = e.data.that;
+            var selection = that._selection;
+            var character = $(this);
+            if (selection.expanding)                
+                selection.attemptExpand(character);
         },
 
         _surfaceMouseup : function(e) {
@@ -383,17 +388,25 @@
             that.focus();
             
             var character = $(this);
-            var position = character.position();
-            var width = character.width();
+            var half = that._whichHalf(character, e.pageX);
 
-            var x = e.pageX - that._surface.offset().left;
-
-            if (x < position.left + (width / 2)) {
+            if (half === 'left') {
                 that._cursor.moveBefore(character);
             }
             else {
                 that._cursor.moveAfter(character);
             }
+        },
+
+        _whichHalf : function(character, pageX) {
+            character = $(character);
+
+            var position = character.position();
+            var width = character.width();
+            var x = pageX - this._surface.offset().left;
+            return (x < position.left + (width / 2))
+                 ? 'left'
+                 : 'right';
         },
     
         _html : function(html) {
