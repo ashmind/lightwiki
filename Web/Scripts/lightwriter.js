@@ -30,6 +30,7 @@
 
         this._cursor = new lightwriter.cursor(this._surface);
         this._selection = new lightwriter.selection(this._surface);
+        this._history = new lightwriter.history();
         
         var thatData = { that : this };
         $('c', this._surface[0]).live('click', thatData, this._surfaceCharacterClick)
@@ -45,6 +46,22 @@
                      .keypress(thatData, this._elementKeypress)
                      .keydown(thatData, this._elementKeydown);
     }
+
+    lightwriter.history = function() {
+        this._stack = [];
+    },
+
+    lightwriter.history.prototype = {
+        undo : function() {
+            var undo = this._stack.pop();
+            if (undo)
+                undo();
+        },
+
+        record : function(undo) {
+            this._stack.push(undo);
+        }
+    };
 
     lightwriter.cursor = function(surface) {
         this._surface = surface;
@@ -150,7 +167,7 @@
             this._end = character;
         },
 
-        attemptExpand : function(characterUnderPointer) {
+        process : function(characterUnderPointer) {
             if (characterUnderPointer.hasClass('selected'))
                 return;
 
@@ -478,6 +495,15 @@
                 return whitespace.test($(this).text());
             }).remove();
             this._surface.find('ul:empty').remove();
-        }
+        },
+
+        _change : function(change) {
+            change['do'].call(this);
+            this._history.record(change.undo);
+        },
+
+        undo : function() {
+            this._history.undo();
+        }        
     };
 })(jQuery);
