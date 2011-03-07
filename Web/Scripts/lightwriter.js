@@ -49,14 +49,14 @@
     },
 
     lightwriter.history.prototype = {
-        undo : function() {
-            var undo = this._stack.pop();
-            if (undo)
-                undo();
+        undo : function(thisObject) {
+            var change = this._stack.pop();
+            if (change)
+                change.undo.call(thisObject, change.context);
         },
 
-        record : function(undo) {
-            this._stack.push(undo);
+        record : function(change) {
+            this._stack.push(change);
         }
     };
 
@@ -161,7 +161,7 @@
         },
         
         removeAllElements : function () {
-            this._getRange().deleteContents();
+            return this._getRange().extractContents();
         },
         
         startElement : function() {
@@ -191,12 +191,19 @@
                     anchor = this._selection.endElement().next();
                     this._deleteSelection();
                 }
-                else {                    
+                else {
                     anchor = cursor.elementAfter();
-                    cursor.elementBefore().remove();
+                    this._change({
+                        context : { anchor: anchor, character : cursor.elementBefore() },                            
+
+                        'do' : function (x) { x.character.remove(); },
+                        undo : function (x) {
+                            x.anchor.before(x.character);
+                            cursor.moveAfter(x.character);
+                        }
+                    });
                 }
                 
-                /*this._cleanEmptyTags();*/
                 if (anchor.length > 0) {
                     cursor.moveBefore(anchor);
                 }
@@ -248,11 +255,19 @@
                 }
                 else {
                     anchor = cursor.elementBefore();
-                    cursor.elementAfter().remove();
+                    this._change({
+                        context : { anchor: anchor, character : cursor.elementAfter() },
+                            
+                        'do' : function (x) { x.character.remove(); },
+                        undo : function (x) { x.anchor.after(x.character); }
+                    });
                 }
-
-                /*this._cleanEmptyTags();*/
+                
                 cursor.moveAfter(anchor);
+            },
+            
+            'ctrl+z' : function() {
+                this.undo();
             }
         },
 
@@ -280,7 +295,7 @@
             if (!that._focused())
                 return;
 
-            var handler = that.keyHandlers[e.which];
+            var handler = that._getKeyHandler(e);
             if (handler) {
                 e.preventDefault();
                 handler.call(that);
@@ -299,7 +314,7 @@
                 return;
             }*/
 
-            if (that.keyHandlers[e.keyCode])
+            if (that._getKeyHandler(e))
                 return;
 
             var newCharacter = String.fromCharCode(e.which);            
@@ -312,6 +327,20 @@
                 that._cursor.elementAfter().before(newCharacter);
             }
             that._cursor.moveAfter(newCharacter);
+        },
+        
+        _getKeyHandler : function (e) {
+            var key = e.which;
+            if (key == 0)
+                key = e.keyCode;
+            
+            if (key >= 48)
+                key = String.fromCharCode(key).toLowerCase();
+                
+            if (e.metaKey)
+                key = "ctrl+" + key;
+            
+            return this.keyHandlers[key];
         },
         
         _surfaceCharacterClick : function(e) {
@@ -384,9 +413,18 @@
         },
 
         _deleteSelection : function() {
-            this._selection.removeAllElements();
-            this._selection.hide();
-            this._cursor.show();
+            var anchor = this._selection.startElement().prev();
+            var fragment;
+            this._change({
+                'do': function() {
+                    fragment = this._selection.removeAllElements();
+                    this._selection.hide();
+                    this.focus();
+                },
+                undo: function() {
+                    anchor.after(fragment);
+                }
+            });
         },
 
         _collapseSelectionTo : function(to) {
@@ -410,12 +448,12 @@
         },
 
         _change : function(change) {
-            change['do'].call(this);
-            this._history.record(change.undo);
+            change['do'].call(this, change.context);
+            this._history.record(change);
         },
 
         undo : function() {
-            this._history.undo();
+            this._history.undo(this);
         }        
     };
 })(jQuery);
