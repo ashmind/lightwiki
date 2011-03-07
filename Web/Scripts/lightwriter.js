@@ -308,25 +308,29 @@
                 return;
             
             e.preventDefault();
-            /*var handler = that.keyHandlers[e.keyCode];
-            if (handler) {
-                handler.call(that);
-                return;
-            }*/
-
-            if (that._getKeyHandler(e))
+            if (e.metaKey || that._getKeyHandler(e))
                 return;
 
             var newCharacter = String.fromCharCode(e.which);            
             newCharacter = $('<c>' + newCharacter + '</c>');
-            var before = that._cursor.elementBefore();
-            if (before.length > 0) {
-                before.after(newCharacter);
-            }
-            else {
-                that._cursor.elementAfter().before(newCharacter);
-            }
-            that._cursor.moveAfter(newCharacter);
+            that._change({
+                context : { newCharacter : newCharacter, before : that._cursor.elementBefore() },
+                
+                'do' : function(x) {
+                    if (x.before.length > 0) {
+                        x.before.after(newCharacter);
+                    }
+                    else {
+                        this._cursor.elementAfter().before(newCharacter);
+                    }
+                    this._cursor.moveAfter(newCharacter);
+                },
+                    
+                undo : function (x) {
+                    x.newCharacter.remove();
+                    this._cursor.moveAfter(x.before);
+                }
+            });
         },
         
         _getKeyHandler : function (e) {
