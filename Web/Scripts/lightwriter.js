@@ -33,18 +33,15 @@
         this._history = new lightwriter.history();
         
         var thatData = { that : this };
-        $('c', this._surface[0]).live('click', thatData, this._surfaceCharacterClick)
-                                .live('mousedown', thatData, this._surfaceCharacterMousedown)
-                                .live('mousemove', thatData, this._surfaceCharacterMousemove);
+        $('c', this._surface[0]).live('click', thatData, this._surfaceCharacterClick);
 
-        var preventDefault = function(e) { e.preventDefault(); };
-        this._surface.click(preventDefault)
-                     .mousedown(preventDefault)
-                     .mouseup(thatData, this._surfaceMouseup);
+        /*var preventDefault = function(e) { e.preventDefault(); };
+        this._surface.click(preventDefault);*/
 
-        this._element.blur(thatData, this._elementBlur)
-                     .keypress(thatData, this._elementKeypress)
-                     .keydown(thatData, this._elementKeydown);
+        $(document).keypress(thatData, this._elementKeypress)
+                   .keydown(thatData, this._elementKeydown);
+
+        this._element.blur(thatData, this._elementBlur);
     }
 
     lightwriter.history = function() {
@@ -156,89 +153,31 @@
 
     lightwriter.selection = function(surface) {
         this._surface = surface;
-        this.active = false;
     };
 
     lightwriter.selection.prototype = {
-        startAt : function(character) {
-            this.hide();
-            this.expanding = true;
-            this._start = character;
-            this._end = character;
+        _getRange : function () {
+            return window.getSelection().getRangeAt(0);
         },
-
-        process : function(characterUnderPointer) {
-            if (characterUnderPointer.hasClass('selected'))
-                return;
-
-            if (characterUnderPointer === this._start && this._start === this._end)
-                return;
-            
-            this.visible = true;
-            var prev = characterUnderPointer.prev();
-            var scanResult = this._eachBetween(
-                this._end, prev,
-                function(element) {                    
-                    element.addClass('selected');
-                }
-            );
-
-            if (!scanResult.swap) {
-                this._end = prev;
-            }
-            else {
-                this._start = prev;
-            }
+        
+        removeAllElements : function () {
+            this._getRange().deleteContents();
         },
-
-        _eachBetween : function(first, second, action) {
-            var between = false;
-            var swap = false;
-            this._surface.find('c, br').each(function() {
-                if (this === first[0]) {
-                    between = true;
-                }
-                else if (this === second[0] && !between) {
-                    var temp = first;
-                    first = second;
-                    second = temp;
-
-                    between = true;
-                    swap = true;
-                }
-
-                if (between)
-                    action($(this));
-
-                return this !== second[0];
-            });
-
-            return { swap : swap };
-        },
-
-        eachElement : function(action) {
-            this._eachBetween(this._start, this._end, action); 
-        },
-
+        
         startElement : function() {
-            return this._start; 
+            return $(this._getRange().startContainer).closest('c');
         },
 
         endElement : function() {
-            return this._end;
+            return $(this._getRange().endContainer).closest('c');
         },
-
-        stop : function() {
-            this.expanding = false;
+        
+        visible : function () {
+            return !window.getSelection().isCollapsed;
         },
-
-        hide : function() {
-            if (this.visible) {
-                this.eachElement(function(element) {
-                    element.removeClass('selected');
-                });
-            }
-            this.visible = false;
+        
+        hide : function () {
+            window.getSelection().removeAllRanges();
         }
     };
 
@@ -248,7 +187,7 @@
                 var cursor = this._cursor;
 
                 var anchor;                
-                if (this._selection.visible) {
+                if (this._selection.visible()) {
                     anchor = this._selection.endElement().next();
                     this._deleteSelection();
                 }
@@ -257,7 +196,7 @@
                     cursor.elementBefore().remove();
                 }
                 
-                this._cleanEmptyTags();
+                /*this._cleanEmptyTags();*/
                 if (anchor.length > 0) {
                     cursor.moveBefore(anchor);
                 }
@@ -283,7 +222,7 @@
             },
 
             /* left */ 37 : function() {
-                if (this._selection.visible) {
+                if (this._selection.visible()) {
                     this._collapseSelectionTo('start');
                     return;
                 }
@@ -292,7 +231,7 @@
             },
 
             /* right */ 39 : function() {
-                if (this._selection.visible) {
+                if (this._selection.visible()) {
                     this._collapseSelectionTo('end');
                     return;
                 }
@@ -303,7 +242,7 @@
             /* delete */ 46 : function() {
                 var cursor = this._cursor;
                 var anchor;
-                if (this._selection.visible) {
+                if (this._selection.visible()) {
                     anchor = this._selection.startElement().prev();
                     this._deleteSelection();
                 }
@@ -312,32 +251,33 @@
                     cursor.elementAfter().remove();
                 }
 
-                this._cleanEmptyTags();
+                /*this._cleanEmptyTags();*/
                 cursor.moveAfter(anchor);
             }
         },
 
-        _focused : false,
+        _focused : function() {
+            return document.activeElement === this._element[0]
+                || this._selection.visible();
+        },
 
-        focus : function() {            
-            this._focused = true;
+        focus : function() {
             this._surface.addClass('active');
             this._element.focus();
-            if (!this._selection.visible)
+            if (!this._selection.visible())
                 this._cursor.show();
         },
 
         _elementBlur : function(e) {
             var that = e.data.that;
 
-            that._focused = false;
             that._surface.removeClass('active');
             that._cursor.hide();
         },
 
         _elementKeydown : function(e) {
             var that = e.data.that;
-            if (!that._focused)
+            if (!that._focused())
                 return;
 
             var handler = that.keyHandlers[e.which];
@@ -349,7 +289,7 @@
 
         _elementKeypress : function(e) {
             var that = e.data.that;
-            if (!that._focused)
+            if (!that._focused())
                 return;
             
             e.preventDefault();
@@ -374,32 +314,6 @@
             that._cursor.moveAfter(newCharacter);
         },
         
-        _surfaceCharacterMousedown : function(e) {            
-            var that = e.data.that;
-            that.focus();
-            that._selection.startAt($(this));
-            that._cursor.hide();
-            e.preventDefault();
-        },
-
-        _surfaceCharacterMousemove : function(e) {
-            var that = e.data.that;
-            var selection = that._selection;
-            var character = $(this);
-            if (selection.expanding)                
-                selection.attemptExpand(character);
-        },
-
-        _surfaceMouseup : function(e) {
-            var that = e.data.that;
-            that.focus();
-
-            that._selection.stop();
-            if (!that._selection.visible)
-                that._cursor.show();
-            e.preventDefault();
-        },
-
         _surfaceCharacterClick : function(e) {
             var that = e.data.that;
             that.focus();
@@ -470,9 +384,7 @@
         },
 
         _deleteSelection : function() {
-            this._selection.eachElement(function(element) {
-                element.remove();
-            });
+            this._selection.removeAllElements();
             this._selection.hide();
             this._cursor.show();
         },
