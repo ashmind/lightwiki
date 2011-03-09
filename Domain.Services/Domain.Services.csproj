@@ -99,6 +99,8 @@
     <Compile Include="DomainServicesModule.cs" />
     <Compile Include="External\DiffMatchPatch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Syntax\IWikiOutputFormat.cs" />
+    <Compile Include="Syntax\WikiSyntaxTransformer.cs" />
     <Compile Include="WikiPageUpdateDetails.cs" />
     <Compile Include="WikiPageUpdater.cs" />
     <Compile Include="WikiPageUpdateResult.cs" />

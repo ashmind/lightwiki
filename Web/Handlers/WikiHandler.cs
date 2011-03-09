@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Dynamic;
 using System.Linq;
+using AshMind.LightWiki.Domain.Services.Concurrency;
 using AspComet;
 using AspComet.Eventing;
 
@@ -10,6 +11,8 @@ using AshMind.Extensions;
 
 using AshMind.LightWiki.Domain;
 using AshMind.LightWiki.Domain.Services;
+using AshMind.LightWiki.Domain.Services.Syntax;
+using AshMind.LightWiki.Web.Syntax;
 using AshMind.LightWiki.Infrastructure.Interfaces;
 
 namespace AshMind.LightWiki.Web.Handlers {
@@ -36,15 +39,21 @@ namespace AshMind.LightWiki.Web.Handlers {
         private readonly IClientRepository clientRepository;
         private readonly IRepository<WikiPage> repository;
         private readonly WikiPageUpdater updater;
+        private readonly WikiSyntaxTransformer syntax;
+        private readonly HtmlWikiOutputFormat htmlWikiOutput;
 
         public WikiHandler(
             IClientRepository clientRepository,
             IRepository<WikiPage> repository,
-            WikiPageUpdater updater
+            WikiPageUpdater updater,
+            WikiSyntaxTransformer syntax,
+            HtmlWikiOutputFormat htmlWikiOutput
         ) {
             this.clientRepository = clientRepository;
             this.repository = repository;
             this.updater = updater;
+            this.syntax = syntax;
+            this.htmlWikiOutput = htmlWikiOutput;
         }
 
         public void ProcessEvent(PublishingEvent @event) {
@@ -66,7 +75,7 @@ namespace AshMind.LightWiki.Web.Handlers {
             var author = this.clientRepository.GetByID(clientId);
             this.SendSyncMessage(
                 new[] { author },
-                channelPrefix + "/sync", true, (int)data.revision, sync.ResultRevisionNumber, sync.Patch
+                channelPrefix + "/sync", true, (int)data.revision, sync.ResultingRevision, sync.Patch
             );
         }
 
@@ -79,7 +88,7 @@ namespace AshMind.LightWiki.Web.Handlers {
             var author = this.clientRepository.GetByID(clientId);
             this.SendSyncMessage(
                 new[] {author},
-                syncChannel, true, authorRevision, result.RevisionNumber, result.PatchForAuthor
+                syncChannel, true, authorRevision, result.ResultingRevision, result.PatchForAuthor
             );
 
             if (!result.PatchForOthers.Any())
@@ -87,25 +96,28 @@ namespace AshMind.LightWiki.Web.Handlers {
 
             this.SendSyncMessage(
                 this.clientRepository.WhereSubscribedTo(syncChannel).Except(author),
-                syncChannel, false, result.RevisionNumber - 1, result.RevisionNumber, result.PatchForOthers
+                syncChannel, false, result.ResultingRevision.Number - 1, result.ResultingRevision, result.PatchForOthers
             );
         }
 
         private void SendSyncMessage(
             IEnumerable<IClient> clients,
-            string channel, bool isReply, int revisionFrom, int revisionTo, string patch
+            string channel, bool isReply,
+            int fromRevisionNumber, WikiPageRevision toRevision,
+            string patch
         ) {
             Contract.Requires<ArgumentException>(isReply || !string.IsNullOrEmpty(patch));
 
+            var html = this.syntax.Transform(toRevision.Text, this.htmlWikiOutput);
             var message = new Message {
                 channel = channel,
                 data = new {
                     isreply = isReply,
                     revision = new {
-                        from = revisionFrom,
-                        to = revisionTo
+                        from = fromRevisionNumber,
+                        to = toRevision.Number
                     },
-                    patch
+                    patch, html
                 }
             };
 

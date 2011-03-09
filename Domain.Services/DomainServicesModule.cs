@@ -13,6 +13,10 @@ namespace AshMind.LightWiki.Domain.Services {
                    .AsSelf()
                    .SingleInstance();
 
+            builder.RegisterType<Syntax.WikiSyntaxTransformer>()
+                   .AsSelf()
+                   .SingleInstance();
+
             builder.RegisterType<WikiPageUpdater>()
                    .AsSelf()
                    .SingleInstance();

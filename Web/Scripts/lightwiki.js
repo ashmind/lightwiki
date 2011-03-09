@@ -15,7 +15,6 @@
     },
     
     setup : function(settings) {
-        settings.syncInterval = settings.syncInterval || 1000;
         settings.revisionContainer = $(settings.revisionContainer);
         
         this._settings = settings;
@@ -30,12 +29,9 @@
         $.cometd.addListener('/meta/disconnect', this, this['/meta/disconnect']);
 
         $.cometd.handshake();
-
-        var that = this;
-        window.setInterval(function() { that._timer(); }, settings.syncInterval);
     },
     
-    _timer : function() {
+    save : function() {
         var text = this._editor.getText();
         if (text === this._server.text)
             return;
@@ -144,7 +140,8 @@
         else {
             throw "Invalid message"; 
         }
-        
+
+        this._settings.viewer.setHtml(message.data.html);
         this._server.revision = revision.to;
         this._settings.revisionContainer.text(this._server.revision);
         if (message.data.isreply)

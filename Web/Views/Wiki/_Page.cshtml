@@ -1,0 +1,39 @@
+﻿@model WikiPageViewModel
+<div id="page" class="view">
+  <a id="action-edit" href="javascript:void('edit')">Edit</a>
+  <a id="action-save" href="javascript:void('save')">Save</a>
+
+  <div id="view">@Html.Raw(Model.Html)</div>
+  <textarea id="edit">@Html.Raw(Model.Text)</textarea>
+</div>
+
+<script type="text/javascript">
+  $(function() {
+      var page = $('#page');
+      var edit = $('#edit');
+      var view = $('#view');
+         
+      lightwiki.setup({
+          cometUrl:          '@Url.Content("~/comet.axd")',
+          revisionContainer: '#revision',
+          page:              '@Model.Page.Slug',
+          serverRevision:    @Model.Page.RevisionNumber,
+          viewer : {
+              setHtml : function(value) { view.html(value); }
+          },
+          editor : {
+              getText : function() { return edit.val(); },
+              setText : function(value) { return edit.val(value); }
+          }
+      });
+
+       $('#action-edit').click(function() {
+          page.removeClass('view').addClass('edit');
+       });
+
+      $('#action-save').click(function() {
+          lightwiki.save();
+          page.removeClass('edit').addClass('view');
+      });
+  });
+</script>

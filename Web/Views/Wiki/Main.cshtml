@@ -1,9 +1,9 @@
 ﻿@model MainViewModel
-@{ ViewBag.Title = Model.CurrentPage.Slug + " :: lightwiki"; }
+@{ ViewBag.Title = Model.Current.Page.Slug + " :: lightwiki"; }
 
 <section id="left">
   @foreach (var page in Model.Pages) {
-      var isCurrent = (page == Model.CurrentPage);
+      var isCurrent = (page == Model.Current.Page);
     
       <a href="@Url.Action("Main", new { slug = page.Slug })" class="block-link@(isCurrent ? " current" : "")">
           @page.Slug
@@ -15,5 +15,5 @@
 </section>
 
 <section id="main">
-  @{Html.RenderPartial("_Edit", Model.CurrentPage);}
+  @{Html.RenderPartial("_Page", Model.Current);}
 </section>

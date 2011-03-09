@@ -91,11 +91,39 @@ a.block-link:hover {
     overflow: hidden;
 }
 
-#text {
+#page, #view, #edit {
+    display: block;
     box-sizing: border-box;
     width: 100%;
     height: 100%;
     border: 0;
-    
+}
+
+#view, #edit {
     padding: 12px;
+}
+
+#page.view #edit, #page.view #action-save,
+#page.edit #view, #action-edit {
+    display: none;
+}
+
+.connected #page.view #action-edit {
+    display: block;
+}
+
+#action-save, #action-edit {
+    position: absolute;
+    top: -0.2em;
+    right: 1.0em;
+    padding: 0.2em;
+    text-decoration: none;
+    text-transform: lowercase;
+    background-color: green;
+    color: white;
+    opacity: 0.2;
+}
+
+#action-save:hover, #action-edit:hover {
+    opacity: 1;
 }
