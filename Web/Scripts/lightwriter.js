@@ -176,6 +176,14 @@
             return !window.getSelection().isCollapsed;
         },
         
+        show : function(startElement, endElement) {
+            var range = document.createRange();
+            range.setStart(startElement[0], 0);
+            range.setEnd(endElement[0], 0);
+
+            window.getSelection().addRange(range);
+        },
+        
         hide : function () {
             window.getSelection().removeAllRanges();
         }
@@ -417,16 +425,23 @@
         },
 
         _deleteSelection : function() {
-            var anchor = this._selection.startElement().prev();
-            var fragment;
             this._change({
-                'do': function() {
-                    fragment = this._selection.removeAllElements();
+                context : {},
+                
+                'do': function(x) {
+                    x.start = this._selection.startElement();
+                    x.end = this._selection.endElement();
+                    x.anchor = x.start.prev();
+                    
+                    x.fragment = this._selection.removeAllElements();
+                    
                     this._selection.hide();
                     this.focus();
                 },
-                undo: function() {
-                    anchor.after(fragment);
+
+                undo: function(x) {
+                    x.anchor.after(x.fragment);
+                    this._selection.show(x.start, x.end);
                 }
             });
         },
