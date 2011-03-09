@@ -15,8 +15,6 @@
     },
     
     setup : function(settings) {
-        settings.revisionContainer = $(settings.revisionContainer);
-        
         this._settings = settings;
         this._editor = settings.editor;
         this._patcher = new diff_match_patch();
@@ -36,7 +34,6 @@
         if (text === this._server.text)
             return;
         
-        this._settings.revisionContainer.text(this._server.revision + '+');
         this._sendChanges(text);
     },
     
@@ -143,7 +140,6 @@
 
         this._settings.viewer.setHtml(message.data.html);
         this._server.revision = revision.to;
-        this._settings.revisionContainer.text(this._server.revision);
         if (message.data.isreply)
             this._clearPending();
     },

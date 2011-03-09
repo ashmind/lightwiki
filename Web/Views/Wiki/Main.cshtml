@@ -5,12 +5,7 @@
   @foreach (var page in Model.Pages) {
       var isCurrent = (page == Model.Current.Page);
     
-      <a href="@Url.Action("Main", new { slug = page.Slug })" class="block-link@(isCurrent ? " current" : "")">
-          @page.Slug
-          @if (isCurrent) {
-            <text>(<span id="revision">@page.RevisionNumber</span>)</text>
-          }
-      </a>
+      <a href="@Url.Action("Main", new { slug = page.Slug })" class="block-link@(isCurrent ? " current" : "")">@page.Slug</a>
   }
 </section>
 
