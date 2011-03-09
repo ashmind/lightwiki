@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Web;
 
 using AshMind.LightWiki.Domain.Services.Syntax;
@@ -21,6 +22,14 @@ namespace AshMind.LightWiki.Web.Syntax {
 
         public string MakeStrikeThrough(string value) {
             return "<s>" + value + "</s>";
+        }
+
+        public string MakeLink(string value) {
+            return string.Format(
+                "<a href='{0}'>{1}</a>",
+                Regex.Replace(value.Trim(), @"\s+", "_"),
+                value
+            );
         }
 
         public string EndOfLine {
