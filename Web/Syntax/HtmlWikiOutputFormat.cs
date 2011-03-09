@@ -4,10 +4,18 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Web;
 
+using AshMind.LightWiki.Domain;
 using AshMind.LightWiki.Domain.Services.Syntax;
+using AshMind.LightWiki.Infrastructure.Interfaces;
 
 namespace AshMind.LightWiki.Web.Syntax {
     public class HtmlWikiOutputFormat : IWikiOutputFormat {
+        private readonly IRepository<WikiPage> pageRepository;
+
+        public HtmlWikiOutputFormat(IRepository<WikiPage> pageRepository) {
+            this.pageRepository = pageRepository;
+        }
+
         public string Escape(string value) {
             return HttpUtility.HtmlEncode(value);
         }
@@ -25,11 +33,10 @@ namespace AshMind.LightWiki.Web.Syntax {
         }
 
         public string MakeLink(string value) {
-            return string.Format(
-                "<a href='{0}'>{1}</a>",
-                Regex.Replace(value.Trim(), @"\s+", "_"),
-                value
-            );
+            var slug = Regex.Replace(value.Trim(), @"\s+", "_");
+            var @class = !pageRepository.Query().Any(p => p.Slug == slug) ? "new" : "";
+
+            return string.Format("<a class='wiki {0}' href='wiki/{1}'>{2}</a>", @class, slug, value);
         }
 
         public string EndOfLine {

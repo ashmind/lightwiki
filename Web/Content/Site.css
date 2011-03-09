@@ -18,6 +18,10 @@ input, select, textarea {
     font-size: inherit;
 }
 
+a {
+    text-decoration: none;
+}
+
 a.block-link {
     border-left: 5px solid white;
     color: #26292D;
@@ -126,4 +130,12 @@ a.block-link:hover {
 
 #action-save:hover, #action-edit:hover {
     opacity: 1;
+}
+
+#page a:hover {
+    text-decoration: underline;
+}
+
+a.wiki.new {
+    color: #a0a0a0;
 }
