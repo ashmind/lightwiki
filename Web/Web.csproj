@@ -135,6 +135,8 @@
     <Compile Include="Handlers\WikiHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Syntax\HtmlWikiOutputFormat.cs" />
+    <Compile Include="Urls\SimpleWikiUrlProvider.cs" />
+    <Compile Include="Urls\IWikiUrlProvider.cs" />
     <Compile Include="ViewModels\WikiPageHierarchyModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\WikiPageViewModel.cs" />

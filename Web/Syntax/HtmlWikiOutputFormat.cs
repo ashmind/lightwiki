@@ -3,17 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Web;
+using System.Web.Mvc;
 
 using AshMind.LightWiki.Domain;
 using AshMind.LightWiki.Domain.Services.Syntax;
 using AshMind.LightWiki.Infrastructure.Interfaces;
+using AshMind.LightWiki.Web.Urls;
 
 namespace AshMind.LightWiki.Web.Syntax {
     public class HtmlWikiOutputFormat : IWikiOutputFormat {
         private readonly IRepository<WikiPage> pageRepository;
+        private readonly IWikiUrlProvider urlProvider;
 
-        public HtmlWikiOutputFormat(IRepository<WikiPage> pageRepository) {
+        public HtmlWikiOutputFormat(IRepository<WikiPage> pageRepository, IWikiUrlProvider urlProvider) {
             this.pageRepository = pageRepository;
+            this.urlProvider = urlProvider;
         }
 
         public string Escape(string value) {
@@ -36,7 +40,10 @@ namespace AshMind.LightWiki.Web.Syntax {
             var slug = Regex.Replace(value.Trim(), @"\s+", "_");
             var @class = !pageRepository.Query().Any(p => p.Slug == slug) ? "new" : "";
 
-            return string.Format("<a class='wiki {0}' href='wiki/{1}'>{2}</a>", @class, slug, value);
+            return string.Format(
+                "<a class='wiki {0}' href='{1}'>{2}</a>",
+                @class, this.urlProvider.GetUrl(slug), value
+            );
         }
 
         public string EndOfLine {
