@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using AshMind.LightWiki.Domain.Services.Concurrency;
-
 using Autofac;
+
+using AshMind.LightWiki.Domain.Services.Concurrency;
+using AshMind.LightWiki.Domain.Services.Syntax;
 
 namespace AshMind.LightWiki.Domain.Services {
     public class DomainServicesModule : Module {
@@ -13,12 +14,16 @@ namespace AshMind.LightWiki.Domain.Services {
                    .AsSelf()
                    .SingleInstance();
 
-            builder.RegisterType<Syntax.WikiSyntaxTransformer>()
-                   .AsSelf()
+            builder.RegisterType<LightSyntax>()
+                   .As<IWikiSyntax>()
                    .SingleInstance();
 
             builder.RegisterType<WikiPageUpdater>()
                    .AsSelf()
+                   .SingleInstance();
+
+            builder.RegisterType<LinkBasedHierarchyProvider>()
+                   .As<IWikiPageHierarchyProvider>()
                    .SingleInstance();
 
             WikiPage.Create = (slug, text) => new VersionedWikiPage(slug, text);

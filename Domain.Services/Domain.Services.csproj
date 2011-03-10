@@ -79,6 +79,9 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AshMind.Extensions">
+      <HintPath>..\$packages\AshMind.Extensions.1.0.3\lib\3.5\AshMind.Extensions.dll</HintPath>
+    </Reference>
     <Reference Include="Autofac">
       <HintPath>..\$packages\Autofac.2.4.3.700\lib\NET40\Autofac.dll</HintPath>
     </Reference>
@@ -98,9 +101,12 @@
     <Compile Include="Concurrency\WikiPageRevision.cs" />
     <Compile Include="DomainServicesModule.cs" />
     <Compile Include="External\DiffMatchPatch.cs" />
+    <Compile Include="IWikiPageHierarchyProvider.cs" />
+    <Compile Include="LinkBasedHierarchyProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Syntax\IWikiOutputFormat.cs" />
-    <Compile Include="Syntax\WikiSyntaxTransformer.cs" />
+    <Compile Include="Syntax\IWikiSyntax.cs" />
+    <Compile Include="Syntax\LightSyntax.cs" />
     <Compile Include="WikiPageUpdateDetails.cs" />
     <Compile Include="WikiPageUpdater.cs" />
     <Compile Include="WikiPageUpdateResult.cs" />

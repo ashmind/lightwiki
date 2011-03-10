@@ -39,14 +39,14 @@ namespace AshMind.LightWiki.Web.Handlers {
         private readonly IClientRepository clientRepository;
         private readonly IRepository<WikiPage> repository;
         private readonly WikiPageUpdater updater;
-        private readonly WikiSyntaxTransformer syntax;
+        private readonly IWikiSyntax syntax;
         private readonly HtmlWikiOutputFormat htmlWikiOutput;
 
         public WikiHandler(
             IClientRepository clientRepository,
             IRepository<WikiPage> repository,
             WikiPageUpdater updater,
-            WikiSyntaxTransformer syntax,
+            IWikiSyntax syntax,
             HtmlWikiOutputFormat htmlWikiOutput
         ) {
             this.clientRepository = clientRepository;
@@ -108,7 +108,7 @@ namespace AshMind.LightWiki.Web.Handlers {
         ) {
             Contract.Requires<ArgumentException>(isReply || !string.IsNullOrEmpty(patch));
 
-            var html = this.syntax.Transform(toRevision.Text, this.htmlWikiOutput);
+            var html = this.syntax.Convert(toRevision.Text, this.htmlWikiOutput);
             var message = new Message {
                 channel = channel,
                 data = new {

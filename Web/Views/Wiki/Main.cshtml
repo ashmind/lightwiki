@@ -2,11 +2,7 @@
 @{ ViewBag.Title = Model.Current.Page.Slug + " :: lightwiki"; }
 
 <section id="left">
-  @foreach (var page in Model.Pages) {
-      var isCurrent = (page == Model.Current.Page);
-    
-      <a href="@Url.Action("Main", new { slug = page.Slug })" class="block-link@(isCurrent ? " current" : "")">@page.Slug</a>
-  }
+  @{Html.RenderPartial("_List", Tuple.Create(Model.Hierachy, Model.Current.Page));}
 </section>
 
 <section id="main">

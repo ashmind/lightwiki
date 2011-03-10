@@ -1,0 +1,11 @@
+﻿@model Tuple<WikiPageHierarchyModel, WikiPage>
+<ul class="page-links">
+  @foreach (var page in Model.Item1.Pages) {
+      var isCurrent = (page == Model.Item2);
+    
+      <li>
+        <a href="@Url.Action("Main", new { slug = page.Slug })" class="block-link@(isCurrent ? " current" : "")">@page.Slug</a>
+        @{Html.RenderPartial("_List", Tuple.Create(Model.Item1.GetNextLevel(page), Model.Item2));}
+      </li>
+  }
+</ul>

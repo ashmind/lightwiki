@@ -31,7 +31,7 @@ namespace AshMind.LightWiki.Web {
                 new { controller = "Wiki", action = "Main", Slug = "root" }
             );
 
-            routes.MapLowerCaseRoute(
+            routes.MapRoute(
                 "Wiki",
                 "wiki/{slug}",
                 new { controller = "Wiki", action = "Main" }

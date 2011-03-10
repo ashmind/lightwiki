@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace AshMind.LightWiki.Domain.Services.Syntax {
-    public class WikiSyntaxTransformer {
-        public string Transform(string markup, IWikiOutputFormat format) {
+    public class LightSyntax : IWikiSyntax {
+        public string Convert(string markup, IWikiOutputFormat format) {
             var result = format.Escape(markup);
 
             result = SimpleTransform(result, "*", "*",  format.MakeBold);
@@ -19,11 +19,19 @@ namespace AshMind.LightWiki.Domain.Services.Syntax {
         }
 
         private string SimpleTransform(string markup, string start, string end, Func<string, string> transform) {
-            start = Regex.Escape(start);
-            end = Regex.Escape(end);
+            return this.GetSimpleRegex(start, end)
+                       .Replace(markup, match => transform(match.Groups[1].Value));
+        }
 
-            return Regex.Replace(
-                markup, start + @"(\w+)" + end, match => transform(match.Groups[1].Value)
+        public IEnumerable<string> GetLinks(string text) {
+            return this.GetSimpleRegex("[", "]")
+                       .Matches(text).Cast<Match>()
+                       .Select(m => m.Groups[1].Value);
+        }
+
+        private Regex GetSimpleRegex(string start, string end) {
+            return new Regex(
+                Regex.Escape(start) + @"(\w+)" + Regex.Escape(end)
             );
         }
     }
