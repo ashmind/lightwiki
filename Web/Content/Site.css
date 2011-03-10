@@ -123,13 +123,13 @@ a.block-link:hover {
     padding: 0.2em;
     text-decoration: none;
     text-transform: lowercase;
-    background-color: green;
+    background-color: #a0a0a0;
     color: white;
-    opacity: 0.2;
 }
 
 #action-save:hover, #action-edit:hover {
-    opacity: 1;
+    text-decoration: none;
+    background-color: green;
 }
 
 #page a:hover {

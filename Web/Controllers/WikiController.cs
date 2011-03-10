@@ -32,6 +32,7 @@ namespace AshMind.LightWiki.Web.Controllers {
         }
 
         public ActionResult Main(string slug) {
+            slug = slug.ToLowerInvariant();
             var page = this.repository.Load(slug);
             if (page == null) {
                 page = WikiPage.Create(slug, "Light wiki is light!");
