@@ -7,7 +7,9 @@ using Autofac;
 
 using Module = Autofac.Module;
 
+using AshMind.LightWiki.Domain.Services.Syntax;
 using AshMind.LightWiki.Web.Handlers;
+using AshMind.LightWiki.Web.Syntax;
 
 namespace AshMind.LightWiki.Web {
     public class WebModule : Module {
@@ -18,6 +20,11 @@ namespace AshMind.LightWiki.Web {
                    .InNamespaceOf<WikiHandler>()
                    .AsImplementedInterfaces()
                    .AsSelf();
+
+            builder.RegisterType<HtmlWikiOutputFormat>()
+                   .As<IWikiOutputFormat>()
+                   .AsSelf()
+                   .SingleInstance();
         }
     }
 }

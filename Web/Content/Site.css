@@ -18,14 +18,8 @@ input, select, textarea {
     font-size: inherit;
 }
 
-a.block-link {
-    border-left: 5px solid white;
-    color: #26292D;
+a {
     text-decoration: none;
-}
-
-a.block-link:hover {
-    border-left: 5px solid #DCDCDC;
 }
 
 #left, #main {
@@ -35,7 +29,8 @@ a.block-link:hover {
 
 #left {
     position: absolute;
-    padding: 12px;
+    padding-top: 12px;
+    padding-bottom: 12px;
 
     top : 0;
     bottom: 0;
@@ -50,6 +45,12 @@ a.block-link:hover {
     cursor: default;
 }
 
+#left ul, #left li {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
 #left a {
     display: block;
     position: relative;
@@ -60,23 +61,36 @@ a.block-link:hover {
 
     overflow: hidden;	
     text-overflow: ellipsis;
+    
+    color: #26292D;
+    text-decoration: none;
 }
 
 #left a.current {
-    border-left: 5px solid #b3b3b3;
     cursor: default;
+    background: #FFE085 !important;
 }
 
-.connected #left a.current {
-    border-left: 5px solid #267F26;
+#left a:hover {
+    background: #FFEEBD;
+}
+
+/*.connected #left a.current {
+    background: #267f26;
+    color: white;
     -webkit-transition: border-left 0.5s linear;
     -moz-transition: border-left 0.5s linear;
 }
 
 .connected.sending #left a.current {
-    border-left: 5px solid #43DE43;
+    background: #43DE43;
     -webkit-transition: border-left 0.5s linear;
     -moz-transition: border-left 0.5s linear;
+}*/
+
+#left .page-links .page-links {
+    margin-left: 0.8em;
+    margin-right: 0.8em;
 }
 
 #main {	
@@ -91,11 +105,46 @@ a.block-link:hover {
     overflow: hidden;
 }
 
-#text {
+#page, #view, #edit {
+    display: block;
     box-sizing: border-box;
     width: 100%;
     height: 100%;
     border: 0;
-    
+}
+
+#view, #edit {
     padding: 12px;
+}
+
+#page.view #edit, #page.view #action-save,
+#page.edit #view, #action-edit {
+    display: none;
+}
+
+.connected #page.view #action-edit {
+    display: block;
+}
+
+#action-save, #action-edit {
+    position: absolute;
+    top: -0.2em;
+    right: 1.0em;
+    padding: 0.2em;
+    text-decoration: none !important;
+    text-transform: lowercase;
+    background-color: #a0a0a0;
+    color: white;
+}
+
+#action-save:hover, #action-edit:hover {
+    background-color: green;
+}
+
+#page a:hover {
+    text-decoration: underline;
+}
+
+a.wiki.new {
+    color: #a0a0a0;
 }

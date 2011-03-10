@@ -34,14 +34,14 @@ namespace AshMind.LightWiki.Domain.Services {
             var patches = this.patcher.patch_fromText(patchText);
             
             var patchSets = (PatchSets)null;
-            var revisionNumber = 0;
+            var revision = (WikiPageRevision)null;
             lock (versioned) {
                 patchSets = LockedUpdate(versioned, revisionToPatch, patches);
-                revisionNumber = versioned.Revision.Number;
+                revision = versioned.Revision;
             }
             
             return new WikiPageUpdateResult(
-                revisionNumber,
+                revision,
                 this.patcher.patch_toText(patchSets.PatchesForAuthor),
                 this.patcher.patch_toText(patchSets.PatchesForOthers)
             );
@@ -84,7 +84,7 @@ namespace AshMind.LightWiki.Domain.Services {
             );
             return new WikiPageUpdateDetails(
                 this.patcher.patch_toText(patch),
-                currentRevision.Number
+                currentRevision
             );
         }
     }

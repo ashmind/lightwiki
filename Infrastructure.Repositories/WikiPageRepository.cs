@@ -13,7 +13,7 @@ using AshMind.LightWiki.Infrastructure.Repositories.FileSystemAbstraction;
 namespace AshMind.LightWiki.Infrastructure.Repositories {
     public class WikiPageRepository : IRepository<WikiPage>, IDisposable {
         private readonly ILocation root;
-        private readonly ConcurrentDictionary<string, WikiPage> pages = new ConcurrentDictionary<string, WikiPage>();
+        private readonly ConcurrentDictionary<string, WikiPage> pages = new ConcurrentDictionary<string, WikiPage>(StringComparer.InvariantCultureIgnoreCase);
         private IDictionary<string, WikiPage> previousSnapshot;
 
         private readonly Timer timer;
