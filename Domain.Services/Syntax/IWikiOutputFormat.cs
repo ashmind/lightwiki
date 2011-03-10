@@ -9,8 +9,9 @@ namespace AshMind.LightWiki.Domain.Services.Syntax {
         string MakeBold(string value);
         string MakeItalic(string value);
         string MakeStrikeThrough(string value);
+        string Highlight(string value, string color);
         string MakeLink(string value);
 
-        string EndOfLine { get; }
+        string EndOfLine { get; }        
     }
 }

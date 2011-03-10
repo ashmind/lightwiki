@@ -5,6 +5,10 @@ using System.Text.RegularExpressions;
 
 namespace AshMind.LightWiki.Domain.Services.Syntax {
     public class LightSyntax : IWikiSyntax {
+        private static readonly IDictionary<string, string> ColorShortcuts = new Dictionary<string, string> {
+            { "y", "yellow" }
+        };
+
         public string Convert(string markup, IWikiOutputFormat format) {
             var result = format.Escape(markup);
 
@@ -12,6 +16,11 @@ namespace AshMind.LightWiki.Domain.Services.Syntax {
             result = SimpleTransform(result, "_", "_",  format.MakeItalic);
             result = SimpleTransform(result, "-", "-",  format.MakeStrikeThrough);
             result = SimpleTransform(result, "[", "]",  format.MakeLink);
+
+            result = Regex.Replace(
+                result, @"=([a-zA-Z])=(\w+)=",
+                match => format.Highlight(match.Groups[2].Value, ColorShortcuts[match.Groups[1].Value])
+            );
 
             result = Regex.Replace(result, @"\r\n?|\n", format.EndOfLine);
 

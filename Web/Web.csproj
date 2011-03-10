@@ -143,6 +143,7 @@
     <Compile Include="WebModule.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Content\markup.css" />
     <Content Include="Global.asax" />
     <Content Include="Scripts\cometd.js" />
     <Content Include="Scripts\diff_match_patch.js" />

@@ -36,6 +36,10 @@ namespace AshMind.LightWiki.Web.Syntax {
             return "<s>" + value + "</s>";
         }
 
+        public string Highlight(string value, string color) {
+            return string.Format("<span class='highlight {0}'>{1}</span>", color, value);
+        }
+
         public string MakeLink(string value) {
             var slug = Regex.Replace(value.Trim(), @"\s+", "_");
             var @class = !pageRepository.Query().Any(p => p.Slug == slug) ? "new" : "";
