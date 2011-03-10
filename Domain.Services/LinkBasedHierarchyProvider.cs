@@ -21,10 +21,9 @@ namespace AshMind.LightWiki.Domain.Services {
         }
 
         public IEnumerable<WikiPage> GetSubPages(WikiPage page) {
-            var links = this.syntax.GetLinks(page.Text).ToSet();
-            return this.repository.Query().Where(
-                p => links.Contains(p.Slug)
-            );
+            var links = new SortedSet<string>(this.syntax.GetLinks(page.Text));
+            var pages = this.repository.Query().Where(p => links.Contains(p.Slug)).ToDictionary(p => p.Slug);
+            return links.Select(link => pages[link]);
         }
     }
 }
